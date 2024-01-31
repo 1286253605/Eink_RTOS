@@ -1,0 +1,31 @@
+{
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#5cd0ec",
+        "activityBar.background": "#5cd0ec",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#e837c5",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#15202b99",
+        "sash.hoverBorder": "#5cd0ec",
+        "statusBar.background": "#2ec3e7",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#17a8cb",
+        "statusBarItem.remoteBackground": "#2ec3e7",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#2ec3e7",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#2ec3e799",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.color": "#2ec3e7",
+    "arduino.path": "D:\\Arduino1\\Arduino",	//注意，这里填入你自己Arduino安装路径，也就是前面配置的Path路径
+    "C_Cpp.intelliSenseEngine": "Tag Parser",
+    "editor.insertSpaces": true,
+    "files.autoGuessEncoding": true,
+    "arduino.logLevel": "info",
+    "explorer.confirmDelete": false,
+    "editor.detectIndentation": false,
+    
+
+}

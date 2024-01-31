@@ -1,0 +1,7 @@
+{
+    "port": "COM4",
+    "configuration": "JTAGAdapter=default,CDCOnBoot=cdc,PartitionScheme=default,CPUFreq=160,FlashMode=dio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
+    "board": "esp32:esp32:esp32c3",
+    "sketch": "Eink_Arduinov1.ino",
+    "output": "./build"
+}
