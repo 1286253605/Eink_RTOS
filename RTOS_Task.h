@@ -8,6 +8,8 @@ void Task_Print( void* args );
 void Task_KeyDetect( void* args );
 void Task_DrawGif( void* args );
 
+uint8_t TaskFunc_GetKey( void );
+
 enum KEY_NOW 
 {
     ENUM_NO_KEY_NOW  = 0,

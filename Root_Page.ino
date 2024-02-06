@@ -63,24 +63,20 @@ void DrawDinosaurGIF( void )
 
     my_display.setPartialWindow( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH );
 
-    uint8_t counter = 0;
+    return;
+}
 
-    while( 1 )
-    {
-        counter++;
-        if( counter % 2 == 1 )
-        {
-            my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
-            my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_2, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
-        }
-        else
-        {
-            my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
-            my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
-        }
-        my_display.nextPage();
-        vTaskDelay( pdMS_TO_TICKS( 200 ) );
-    }
+void DrawTestText( void )
+{    
+    my_display.setFullWindow();
+    my_display.fillScreen( GxEPD_WHITE );
+    my_u8g2_fonts.setCursor( 100, 100 );
+    my_u8g2_fonts.print("Man,what can i say");
+    my_u8g2_fonts.setCursor( 100, 115 );
+    my_u8g2_fonts.print("Manba out");
+    my_display.nextPage();
 
+    /* 划分局部刷新窗口 */
+    my_display.setPartialWindow( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y, PAGE_TEXT_PARTIAL_WIDTH, PAGE_TEXT_PARTIAL_HEIGHT );
     return;
 }

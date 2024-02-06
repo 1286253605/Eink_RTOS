@@ -20,7 +20,8 @@ U8G2_FOR_ADAFRUIT_GFX my_u8g2_fonts;
 /* 显示屏驱动 */
 GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> my_display( GxEPD2_154( /*CS=*/7, /*DC=*/4, /*RST=*/5, /*BUSY=*/6 ) );
 
-
+TaskHandle_t THt_DrawTT     = NULL;
+TaskHandle_t THt_DrawGIF    = NULL;
 
 
 
@@ -38,9 +39,14 @@ void SystemSoftwareInit( void )
     sema_binary_keys            = xSemaphoreCreateBinary();
     muxtex_handler_keys_now     = xSemaphoreCreateMutex();
 
-    xTaskCreate( Task_Print,        "PRINT",    (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
-    xTaskCreate( Task_KeyDetect,    "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
-    xTaskCreate( Task_DrawGif,      "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    NULL );
+    // xTaskCreate( Task_Print,                "PRINT",    (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
+    xTaskCreate( Task_KeyDetect,            "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
+    xTaskCreate( Task_DrawGif,              "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    &THt_DrawGIF );
+    xTaskCreate( Task_DrawTestText,         "DTT",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawTT );
+    
+    
+    /* 只启动必要任务和主页面任务 其他任务直接挂起等待页面切换 */
+    vTaskSuspend( THt_DrawTT );
     return;
 }
 

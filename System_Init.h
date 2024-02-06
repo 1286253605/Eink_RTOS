@@ -11,6 +11,9 @@ extern U8G2_FOR_ADAFRUIT_GFX my_u8g2_fonts;
 /* 显示屏驱动 */
 extern GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> my_display;
 
+extern TaskHandle_t THt_DrawTT;
+extern TaskHandle_t THt_DrawGIF;
+
 void SystemHardwareInit( void );
 void SystemSoftwareInit( void );
 
