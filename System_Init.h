@@ -17,4 +17,8 @@ void SystemSoftwareInit( void );
 void _GPIOInit( void );
 void _DisplayInit( void );
 
+#define PIN_STATUS_BOOT     digitalRead( PIN_BOOT_9 )
+#define PIN_STATUS_MODE     digitalRead( PIN_MODE )
+#define PIN_STATUS_KEEP     digitalRead( PIN_KEEP )
+
 #endif

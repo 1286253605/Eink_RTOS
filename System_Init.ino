@@ -13,6 +13,7 @@
 #include <Fonts/FreeMonoBold24pt7b.h>
 
 
+
 /* Global Var */
 /* U8G2字体设置 */
 U8G2_FOR_ADAFRUIT_GFX my_u8g2_fonts;
@@ -34,6 +35,9 @@ void SystemHardwareInit( void )
 
 void SystemSoftwareInit( void )
 {
+    sema_binary_keys            = xSemaphoreCreateBinary();
+    muxtex_handler_keys_now     = xSemaphoreCreateMutex();
+
     xTaskCreate( Task_Print,        "PRINT",    (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
     xTaskCreate( Task_KeyDetect,    "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
     xTaskCreate( Task_DrawGif,      "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    NULL );
@@ -44,7 +48,7 @@ void _DisplayInit( void )
 {
     /* 屏幕SPI */
     /*
-    #include "pins_arduino.h"
+        #include "pins_arduino.h"
         static const uint8_t SS    = 7;
         static const uint8_t MOSI  = 3;
         static const uint8_t MISO  = 10;
@@ -67,12 +71,29 @@ void _DisplayInit( void )
     my_display.nextPage();
 }
 
+void INTR_Keys( void )
+{
+    /* RTOS_Task.ino Task_KeyDetect */
+    if( PIN_STATUS_BOOT == LOW || PIN_STATUS_KEEP == LOW || PIN_STATUS_MODE == LOW )
+    {
+        xSemaphoreGiveFromISR( sema_binary_keys, NULL );
+    }
+    return;
+}
+
 void _GPIOInit( void )
 {
-    pinMode( PIN_BOOT_9, INPUT );
-    pinMode( PIN_MODE, INPUT );
-    pinMode( PIN_KEEP, INPUT_PULLUP );
+    /* 按键 & LED */
     pinMode( PIN_LED, OUTPUT );
+    pinMode( PIN_BOOT_9, INPUT );                       /* BOOOT 硬件上拉 */
+    pinMode( PIN_MODE, INPUT_PULLUP );
+    pinMode( PIN_KEEP, INPUT_PULLUP );
+    
+
+    /* 中断 */
+    attachInterrupt( PIN_MODE,      INTR_Keys,      CHANGE );
+    attachInterrupt( PIN_KEEP,      INTR_Keys,      CHANGE );
+    attachInterrupt( PIN_BOOT_9,    INTR_Keys,      CHANGE );
 
     return;
 }
