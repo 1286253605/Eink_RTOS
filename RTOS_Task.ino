@@ -7,6 +7,7 @@
 #include "Eink_Arduinov1.h"
 #include "Root_Page.h"
 
+
 #define KEY_NEXT_PAGE ENUM_KEY_BOOT
 
 
@@ -56,6 +57,8 @@ void _Timer_TaskDTT_Callback( void* id )
 void _Timer_TaskDrawGIF_Callback( void* id )
 {
     _counter_drawGIF++;
+    if( _counter_drawGIF >= 254 )
+    {  _counter_drawGIF = 0; }
 
 }
 
@@ -70,8 +73,8 @@ void Task_DrawGif( void* args )
     /* 用于判断是否为第一次进入页面 被创建后进入循环和切换页面进入循环都属于第一次进入页面 需要刷新加载静态的内容 */
     static uint8_t _first_loop_flag = pdTRUE;
     uint8_t _last_counter = _counter_drawGIF;
-    /* 200ms刷新一帧 */
-    timer_drawGIF = xTimerCreate( "TimerDrawGIF", pdMS_TO_TICKS( 200 ), pdTRUE, ( void* )0, _Timer_TaskDrawGIF_Callback );
+    /* 500ms刷新一帧 刷新间隔过低无法正常显示 */
+    timer_drawGIF = xTimerCreate( "TimerDrawGIF", pdMS_TO_TICKS( 500 ), pdTRUE, ( void* )0, _Timer_TaskDrawGIF_Callback );
     Serial.printf("nimasile lx1\n");
     for(;;)
     {
@@ -80,7 +83,6 @@ void Task_DrawGif( void* args )
             _first_loop_flag = pdFALSE;
             DrawDinosaurGIF();                  /* Init */
             xTimerStart( timer_drawGIF, 10 );
-            Serial.printf("nimasile lx2\n");
         }
 
         /* 不相等说明已经更新 画下一帧 */
@@ -123,6 +125,8 @@ void Task_DrawTestText( void* args )
 {
     static uint8_t _first_loop_flag = pdTRUE;
     uint8_t _last_counter = _counter_dtt;
+    String _string_dtt_show = "牢大今年";
+    
     timer_drawTT = xTimerCreate( "TimerDTT", pdMS_TO_TICKS( 1000 ), pdTRUE, (void*)1, _Timer_TaskDTT_Callback );    
     
 
@@ -140,7 +144,11 @@ void Task_DrawTestText( void* args )
             _last_counter = _counter_dtt;
             my_display.fillRect( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y, PAGE_TEXT_PARTIAL_WIDTH, PAGE_TEXT_PARTIAL_HEIGHT, GxEPD_WHITE );
             my_u8g2_fonts.setCursor( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y );
-            my_u8g2_fonts.printf( "牢大今年%d岁了!", _last_counter );
+            _string_dtt_show += _last_counter;
+            _string_dtt_show += "岁了";
+            my_u8g2_fonts.print( _string_dtt_show );
+            _string_dtt_show = "牢大今年";
+            Serial.println( "DTT is running...\n" );
             my_display.nextPage();
         }
 
@@ -169,6 +177,14 @@ void Task_Print( void* args )
         {
             /* 可以在此处挂起/恢复任务 */
             Serial.printf( "BOOT Pressed -%d-\n", temp_key );
+        }
+        else if ( temp_key == ENUM_KEY_KEEP )
+        {
+            Serial.printf( "KEEP Pressed -%d-\n", temp_key );
+        }
+        else if ( temp_key == ENUM_KEY_MODE )
+        {
+            Serial.printf( "MODE Pressed -%d-\n", temp_key );
         }
 
         

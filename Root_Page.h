@@ -7,9 +7,9 @@
 #define DINOSAUR_HEIGH      47
 
 #define PAGE_TEXT_PARTIAL_POS_X         0
-#define PAGE_TEXT_PARTIAL_POS_Y         130
+#define PAGE_TEXT_PARTIAL_POS_Y         120
 #define PAGE_TEXT_PARTIAL_WIDTH         200
-#define PAGE_TEXT_PARTIAL_HEIGHT        70
+#define PAGE_TEXT_PARTIAL_HEIGHT        20
 
 extern const unsigned char pic_dinosaur_1[];
 extern const unsigned char pic_dinosaur_2[];

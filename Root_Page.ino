@@ -3,7 +3,8 @@
 
 #include "Root_Page.h"
 #include "System_Init.h"
-
+/* include fonts */
+#include <Fonts/FreeMonoBold9pt7b.h>
 
 //width:43 height:47
 const unsigned char pic_dinosaur_1[] =
@@ -55,7 +56,7 @@ void DrawDinosaurGIF( void )
 {
     my_display.setFullWindow();
     my_display.fillScreen( GxEPD_WHITE );
-    my_u8g2_fonts.setCursor( 60, 40 );
+    my_u8g2_fonts.setCursor( 0, 185 );
     my_u8g2_fonts.print("原神,启动!");
 
     my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
@@ -70,13 +71,17 @@ void DrawTestText( void )
 {    
     my_display.setFullWindow();
     my_display.fillScreen( GxEPD_WHITE );
-    my_u8g2_fonts.setCursor( 100, 100 );
+    my_u8g2_fonts.setCursor( 0, 15 );
     my_u8g2_fonts.print("Man,what can i say");
-    my_u8g2_fonts.setCursor( 100, 115 );
+    my_u8g2_fonts.setCursor( 0, 30 );
     my_u8g2_fonts.print("Manba out");
+
+    my_display.setFont(&FreeMonoBold9pt7b);
+    my_display.setTextColor(GxEPD_BLACK);
+
     my_display.nextPage();
 
     /* 划分局部刷新窗口 */
-    my_display.setPartialWindow( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y, PAGE_TEXT_PARTIAL_WIDTH, PAGE_TEXT_PARTIAL_HEIGHT );
+    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
     return;
 }

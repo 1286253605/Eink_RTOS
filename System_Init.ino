@@ -7,7 +7,7 @@
 
 
 // FreeFonts from Adafruit_GFX
-#include <Fonts/FreeMonoBold9pt7b.h>
+
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
@@ -40,9 +40,9 @@ void SystemSoftwareInit( void )
     muxtex_handler_keys_now     = xSemaphoreCreateMutex();
 
     // xTaskCreate( Task_Print,                "PRINT",    (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
-    xTaskCreate( Task_KeyDetect,            "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
-    xTaskCreate( Task_DrawGif,              "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    &THt_DrawGIF );
-    xTaskCreate( Task_DrawTestText,         "DTT",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawTT );
+    xTaskCreate( Task_KeyDetect,            "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL            );
+    xTaskCreate( Task_DrawGif,              "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    &THt_DrawGIF    );
+    xTaskCreate( Task_DrawTestText,         "DTT",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawTT     );
     
     
     /* 只启动必要任务和主页面任务 其他任务直接挂起等待页面切换 */
@@ -72,9 +72,6 @@ void _DisplayInit( void )
     my_u8g2_fonts.setBackgroundColor( GxEPD_WHITE );
     my_u8g2_fonts.setFont( chinese_city_gb2312 );
 
-    my_u8g2_fonts.setCursor( 20, 20 );
-    my_u8g2_fonts.print( "hahaha1" );
-    my_display.nextPage();
 }
 
 void INTR_Keys( void )
@@ -90,8 +87,8 @@ void INTR_Keys( void )
 void _GPIOInit( void )
 {
     /* 按键 & LED */
-    pinMode( PIN_LED, OUTPUT );
-    pinMode( PIN_BOOT_9, INPUT );                       /* BOOOT 硬件上拉 */
+    pinMode( PIN_LED, OUTPUT    );
+    pinMode( PIN_BOOT_9, INPUT  );                       /* BOOOT 硬件上拉 */
     pinMode( PIN_MODE, INPUT_PULLUP );
     pinMode( PIN_KEEP, INPUT_PULLUP );
     
