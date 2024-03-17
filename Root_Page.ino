@@ -71,9 +71,9 @@ void DrawTestText( void )
 {    
     my_display.setFullWindow();
     my_display.fillScreen( GxEPD_WHITE );
-    my_u8g2_fonts.setCursor( 0, 15 );
+    my_u8g2_fonts.setCursor( 0, 5 );
     my_u8g2_fonts.print("Man,what can i say");
-    my_u8g2_fonts.setCursor( 0, 30 );
+    my_u8g2_fonts.setCursor( 0, 200 );
     my_u8g2_fonts.print("Manba out");
 
     my_display.setFont(&FreeMonoBold9pt7b);

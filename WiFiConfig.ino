@@ -1,0 +1,229 @@
+#include <Arduino.h>
+#include <DNSServer.h>
+#include <EEPROM.h>
+#include <WebServer.h>
+#include <HTTPClient.h>
+// #include <esp_wifi.h>
+#include "WiFiConfig.h"
+
+/* Global Variables */
+String ssid_list = "";
+const char *my_ap_ssid = "ESP32_Eink_WiFi";         /* 配网WiFi热点名称 */
+const IPAddress my_ap_ip( 192, 168, 1, 1 );         /* 配网ESP32 IP地址 */
+const IPAddress my_ap_mask( 255, 255, 255, 0 );     /* 配网子网掩码 */
+WebServer my_webserver( 80 );                       /* 配网网页的端口 */
+DNSServer my_dnsserver;
+
+String target_wifi_ssid     = "";
+String target_wifi_passwd   = "";
+String target_site_authcode = "";               /* 心知天气密钥 */
+
+/* Function */
+/**************************************************************************************/
+String MakeHTMLPage( String title, String contents );
+void WiFiScan( void );
+void StartWebServer( void );
+void WIFI_HTMLRootPage( void );
+void WIFI_HTMLSettingsPage( void );
+void WIFI_HTMLSetap( void );
+void WIFI_HTMLNotFoundPage( void );
+String urlDecode(String input);
+/**************************************************************************************/
+/* 配置WiFi主函数 */
+void SetupConfig( void )
+{
+    WiFiScan();
+    StartWebServer();
+    return;
+}
+
+void WiFiScan( void )
+{
+    /* 使用终端模式 STA  作为连接WIFI的设备扫描当前环境所有的WIFI */
+    WiFi.mode( WIFI_STA );
+    WiFi.disconnect();
+    vTaskDelay( pdMS_TO_TICKS( 100 ) );
+    int AP_num = WiFi.scanNetworks();
+    vTaskDelay( pdMS_TO_TICKS( 100 ) );
+
+    for( int i = 0; i < AP_num; i++ )
+    {
+        ssid_list += "<option value=\"";
+        ssid_list += WiFi.SSID( i );
+        ssid_list += "\">";
+        ssid_list += WiFi.SSID( i );
+        ssid_list += "</option>";
+    }
+    vTaskDelay( pdMS_TO_TICKS( 100 ) );
+
+}
+
+/* 启动Web服务 */
+void StartWebServer( void )
+{
+    WiFi.mode( WIFI_AP );
+    WiFi.softAPConfig( my_ap_ip, my_ap_ip, my_ap_mask );
+    WiFi.softAP( my_ap_ssid );
+    /* 启动一个DNS服务器 监听53端口 所有域名请求都解析到 my_ap_ip地址 */
+    my_dnsserver.start( 53, "*", my_ap_ip );  
+
+    Serial.print( "Config Web Server :" );
+    Serial.println( WiFi.localIP() );
+    my_webserver.on( "/settings", WIFI_HTMLSettingsPage );
+    my_webserver.on( "/", WIFI_HTMLRootPage );
+    my_webserver.on( "/setap", WIFI_HTMLSetap );
+    my_webserver.onNotFound( WIFI_HTMLNotFoundPage );
+
+    my_webserver.begin();
+}
+
+
+String MakeHTMLPage( String title, String contents )
+{
+    String s = "<!DOCTYPE html><html><head>";
+    s += "<meta name=\"viewport\" content=\"width=device-width,user-scalable=0\">";
+    s += "<title>";
+    s += title;
+    s += "</title></head><body>";
+    s += contents;
+    s += "</body></html>";
+    return s;
+}
+
+/* Page / */
+void WIFI_HTMLRootPage( void )
+{
+    String s = "<head><meta charset=\"utf-8\"><h1>配置界面</h1><p>仅永久保存心知密钥</p>";
+    s += "<form method=\"get\" action=\"setconfig\"><br>心知密钥:<input name=\"authcode\" length=64 type=\"password\">";
+    s += "<br>NTP服务器:<input name=\"ntpServer\" length=64 type=\"password\">";  
+    s += "<br>时区:<input name=\"timezone_offset\" length=64 type=\"password\">";         
+    s += "<br>诗词Token:<input name=\"token\" length=64 type=\"password\"><br><br>";    
+    s += "<input name=\"保存并提交\"  type=\"submit\"></form>";  
+
+    my_webserver.send( 200, "text/html", MakeHTMLPage( "配置界面", s ) );
+}
+
+/* Page /settings */
+void WIFI_HTMLSettingsPage( void )
+{
+    String s = "<head><meta charset=\"utf-8\"></head><h1>Wi-Fi配置</h1><p>请在选择WiFi名称后输入对应的WiFi密码</p>";
+    s += "<form method=\"get\" action=\"setap\"><label>网络:</label><select name=\"ssid\">";
+    s += ssid_list;
+    s += "</select><br>密码:<input name=\"pass\" length=64 type=\"password\">";
+    s += "<p>首次使用务必填写心知密钥</p>";
+    s += "<form method=\"get\" action=\"setconfig\">心知密钥:<input name=\"authcode\" length=64 type=\"password\"><br>";
+    s += "<input name=\"保存并提交\"  type=\"submit\"></form>";
+    my_webserver.send(200, "text/html", MakeHTMLPage("Wi-Fi配置", s)); 
+}
+
+// ! todo ->  restart
+/* Page /setap */
+void WIFI_HTMLSetap( void )
+{
+    /* 清空数据再写入 但是不清除心知天气密钥 */
+    for( uint32_t i = 4000; i < 4064; i++ )
+    {
+        EEPROM.begin( 4096 );
+        EEPROM.write( i, 0 );
+        EEPROM.commit();
+    }
+
+    target_wifi_ssid = urlDecode( my_webserver.arg( "ssid" ) );
+    Serial.print( "SSID:\t" );          
+    Serial.println( target_wifi_ssid );
+    target_wifi_passwd = urlDecode( my_webserver.arg( "pass" ) );
+    Serial.print( "Passwd:\t" );        
+    Serial.println( target_wifi_passwd );
+    target_site_authcode = urlDecode( my_webserver.arg( "authcode" ) );
+    Serial.print( "authcode:\t" );      
+    Serial.println( target_site_authcode );
+
+    /*******************WIFISSID和Password写入Flash中*******************/
+    for( uint8_t i = 0; i < target_wifi_ssid.length(); i++ )
+    {
+        EEPROM.begin( 4096 );
+        EEPROM.write( TARGET_SSID_ADDR + i, target_wifi_ssid[ i ] );
+        EEPROM.commit();
+    }
+
+    for( uint8_t i = 0; i < target_wifi_passwd.length(); i++ )
+    {
+        EEPROM.begin( 4096 );
+        EEPROM.write( TARGET_PASSWD_ADDR + i, target_wifi_passwd[ i ] );
+        EEPROM.commit();
+    }
+
+    /*******************心知天气密钥写入Flash*******************/
+    if( target_site_authcode != "" )
+    {
+        /* 先清除后写入 */
+        for( uint32_t i = TARGET_AUTH_ADDR; i < 4096; i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( i, 0 );
+            EEPROM.commit();
+        }
+
+        for( uint32_t i = TARGET_AUTH_ADDR; i < target_site_authcode.length(); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( TARGET_AUTH_ADDR + i, target_site_authcode[ i ] );
+            EEPROM.commit();
+        }
+
+        Serial.println( "Write AUTH to flash done" );
+    }
+    EEPROM.end();
+
+    String s = "<head><meta charset=\"utf-8\"></head><h1>设置结束！</h1><p>设备即将在重启后接入 \"";
+    s += target_wifi_ssid;
+    s += "\"";
+    my_webserver.send( 200, "text/html", MakeHTMLPage( "WiFi配置", s ) );
+
+    // ESP.restart();
+}
+
+/* Page Notfound */
+void WIFI_HTMLNotFoundPage( void )
+{
+    /* 配置超链接跳转到配网Settings页面 */
+    String s = "<head><meta charset=\"utf-8\"></head><h1>配网模式</h1><p><a href=\"/settings\">点击配网</a></p>";
+    my_webserver.send( 200, "text/html", MakeHTMLPage( "配网模式", s ) );
+}
+
+
+String urlDecode(String input)
+{
+    String s = input;
+    s.replace("%20", " ");
+    s.replace("+", " ");
+    s.replace("%21", "!");
+    s.replace("%22", "\"");
+    s.replace("%23", "#");
+    s.replace("%24", "$");
+    s.replace("%25", "%");
+    s.replace("%26", "&");
+    s.replace("%27", "\'");
+    s.replace("%28", "(");
+    s.replace("%29", ")");
+    s.replace("%30", "*");
+    s.replace("%31", "+");
+    s.replace("%2C", ",");
+    s.replace("%2E", ".");
+    s.replace("%2F", "/");
+    s.replace("%2C", ",");
+    s.replace("%3A", ":");
+    s.replace("%3A", ";");
+    s.replace("%3C", "<");
+    s.replace("%3D", "=");
+    s.replace("%3E", ">");
+    s.replace("%3F", "?");
+    s.replace("%40", "@");
+    s.replace("%5B", "[");
+    s.replace("%5C", "\\");
+    s.replace("%5D", "]");
+    s.replace("%5E", "^");
+    s.replace("%5F", "-");
+    s.replace("%60", "`");
+    return s;
+}
