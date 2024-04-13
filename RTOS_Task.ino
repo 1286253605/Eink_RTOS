@@ -6,6 +6,7 @@
 #include "RTOS_Task.h"
 #include "Eink_Arduinov1.h"
 #include "Root_Page.h"
+#include "WiFiConfig.h"
 
 
 #define KEY_NEXT_PAGE ENUM_KEY_BOOT
@@ -45,23 +46,28 @@ uint8_t TaskFunc_GetKey( void )
 /**********************************************
     Calback
 **********************************************/
-void _Timer_TaskDTT_Callback( void* id )
+
+
+void _Timer_TaskAll_Callback( TimerHandle_t _timer )
 {
-    _counter_dtt++;
-    if( _counter_dtt >= 100 )
+    uint32_t id = ( uint32_t )pvTimerGetTimerID( _timer );
+    
+    if( id == TIMER_ID_DRAW_TT )
     {
-        _counter_dtt = 0;
+        _counter_dtt++;
+        if( _counter_dtt >= 100 )
+        {
+            _counter_dtt = 0;
+        }
+    }
+
+    if( id == TIMER_ID_DRAW_GIF )
+    {
+        _counter_drawGIF++;
+        if( _counter_drawGIF >= 254 )
+        {  _counter_drawGIF = 0; }
     }
 }
-
-void _Timer_TaskDrawGIF_Callback( void* id )
-{
-    _counter_drawGIF++;
-    if( _counter_drawGIF >= 254 )
-    {  _counter_drawGIF = 0; }
-
-}
-
 
 /**********************************************
     Task 
@@ -74,8 +80,9 @@ void Task_DrawGif( void* args )
     static uint8_t _first_loop_flag = pdTRUE;
     uint8_t _last_counter = _counter_drawGIF;
     /* 500ms刷新一帧 刷新间隔过低无法正常显示 */
-    timer_drawGIF = xTimerCreate( "TimerDrawGIF", pdMS_TO_TICKS( 500 ), pdTRUE, ( void* )0, _Timer_TaskDrawGIF_Callback );
-    Serial.printf("nimasile lx1\n");
+    timer_drawGIF = xTimerCreate( "TimerDrawGIF", pdMS_TO_TICKS( 500 ), pdTRUE, 
+                                (void*)TIMER_ID_DRAW_GIF, _Timer_TaskAll_Callback );
+    
     for(;;)
     {
         if( _first_loop_flag == pdTRUE )
@@ -127,7 +134,8 @@ void Task_DrawTestText( void* args )
     uint8_t _last_counter = _counter_dtt;
     String _string_dtt_show = "牢大今年";
     
-    timer_drawTT = xTimerCreate( "TimerDTT", pdMS_TO_TICKS( 1000 ), pdTRUE, (void*)1, _Timer_TaskDTT_Callback );    
+    timer_drawTT = xTimerCreate( "TimerDTT", pdMS_TO_TICKS( 1000 ), pdTRUE, 
+                                    (void*)TIMER_ID_DRAW_TT, _Timer_TaskAll_Callback );    
     
 
     for(;;)
@@ -223,4 +231,16 @@ void Task_KeyDetect( void* args )
     }
 }
 
+/* 选择配网任务 */
+
+void Task_ConfigWeb( void )
+{
+
+    for(;;)
+    {
+
+    }
+
+    return;
+}
 

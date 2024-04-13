@@ -18,17 +18,7 @@ String target_wifi_ssid     = "";
 String target_wifi_passwd   = "";
 String target_site_authcode = "";               /* 心知天气密钥 */
 
-/* Function */
-/**************************************************************************************/
-String MakeHTMLPage( String title, String contents );
-void WiFiScan( void );
-void StartWebServer( void );
-void WIFI_HTMLRootPage( void );
-void WIFI_HTMLSettingsPage( void );
-void WIFI_HTMLSetap( void );
-void WIFI_HTMLNotFoundPage( void );
-String urlDecode(String input);
-/**************************************************************************************/
+
 /* 配置WiFi主函数 */
 void SetupConfig( void )
 {
@@ -227,3 +217,62 @@ String urlDecode(String input)
     s.replace("%60", "`");
     return s;
 }
+
+/* 检查Flash中的WiFi配置 没有配置内容则返回False 有则写入全局变量并返回True */
+bool CheckWiFiConfigInFlash( void )
+{
+    target_wifi_ssid    = "";
+    target_wifi_passwd  = "";
+    Serial.println( "Reading Flash..." );
+
+    /* 如果Flash中没有WiFi信息 函数直接返回false */
+    if( EEPROM.read( TARGET_SSID_ADDR ) == 0 )
+    {
+        Serial.printf( "No WiFi config in flash\n" );
+        return false;
+    }
+
+    for( uint8_t i = TARGET_SSID_ADDR; i < TARGET_SSID_ADDR + 32; i++ )
+    {
+        char ch = EEPROM.read( i );
+        if( ch != 0 )
+        {
+            target_wifi_ssid += char( EEPROM.read( i ) );
+        }
+    }
+    Serial.printf( "WiFi SSID : %s\n", target_wifi_ssid.c_str() );
+
+    for( uint8_t i = TARGET_PASSWD_ADDR; i < TARGET_PASSWD_ADDR + 32; i++ )
+    {
+        char ch = EEPROM.read( i );
+        if( ch != 0 )
+        {
+            target_wifi_passwd += char( EEPROM.read( i ) );
+        }
+    }
+    Serial.printf( "WiFi Passwd : %s\n", target_wifi_ssid );
+
+    for( uint8_t i = TARGET_AUTH_ADDR; i < TARGET_AUTH_ADDR + 64; i++  )
+    {
+        char ch = EEPROM.read( i );
+        if( ch != 0 )
+        {
+            target_site_authcode += char( EEPROM.read( i ) );
+        }
+    }
+    Serial.printf( "Auth code : %s\n", target_site_authcode );
+
+    return true;
+}
+
+
+void WiFi_Init( void )
+{
+    if( True == CheckWiFiConfigInFlash() )
+    {
+        /* 如果Flash中有WiFi就进行链接 */
+        WiFi.begin( target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
+        /* 还需要再检查链接是否成功 WiFi.status() == WL_CONNECTED */
+    }
+}
+

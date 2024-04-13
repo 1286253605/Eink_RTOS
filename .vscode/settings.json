@@ -19,7 +19,8 @@
         "titleBar.inactiveForeground": "#15202b99"
     },
     "peacock.color": "#2ec3e7",
-    "arduino.path": "D:\\Arduino1\\Arduino",	//注意，这里填入你自己Arduino安装路径，也就是前面配置的Path路径
+    // "arduino.path": "D:\\Arduino1\\Arduino",	//注意，这里填入你自己Arduino安装路径，也就是前面配置的Path路径
+    "arduino.path": "E:\\1EINK\\Arduino\\main_1_8\\Arduino",
     "C_Cpp.intelliSenseEngine": "Tag Parser",
     "editor.insertSpaces": true,
     "files.autoGuessEncoding": true,

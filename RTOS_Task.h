@@ -1,6 +1,9 @@
 #ifndef _RTOS_TASK_H
 #define _RTOS_TASK_H
 
+#define TIMER_ID_DRAW_GIF   0
+#define TIMER_ID_DRAW_TT    1
+
 extern SemaphoreHandle_t muxtex_keys;
 extern SemaphoreHandle_t muxtex_handler_keys_now;
 
