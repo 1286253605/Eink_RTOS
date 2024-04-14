@@ -16,4 +16,8 @@ extern const unsigned char pic_dinosaur_2[];
 
 void DrawDinosaurGIF( void );
 void DrawTestText( void );
+void DrawSelectPage( void );
+void DrawSelectPage( void );
+void DrawSelectPageLoop( uint8_t mode_now );
+
 #endif

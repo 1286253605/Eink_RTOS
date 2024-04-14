@@ -22,6 +22,7 @@ GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> my_display( GxEPD2_154( /*CS=*/7, /*DC
 
 TaskHandle_t THt_DrawTT     = NULL;
 TaskHandle_t THt_DrawGIF    = NULL;
+TaskHandle_t THt_DrawSelect = NULL;
 
 
 
@@ -43,10 +44,11 @@ void SystemSoftwareInit( void )
     xTaskCreate( Task_KeyDetect,            "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL            );
     xTaskCreate( Task_DrawGif,              "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    &THt_DrawGIF    );
     xTaskCreate( Task_DrawTestText,         "DTT",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawTT     );
-    
+    xTaskCreate( Task_Select,               "SEL",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    &THt_DrawSelect );
     
     /* 只启动必要任务和主页面任务 其他任务直接挂起等待页面切换 */
     vTaskSuspend( THt_DrawTT );
+    vTaskSuspend( THt_DrawGIF );
     return;
 }
 

@@ -9,7 +9,10 @@
 #include "WiFiConfig.h"
 
 
-#define KEY_NEXT_PAGE ENUM_KEY_BOOT
+#define KEY_NEXT_PAGE       ENUM_KEY_BOOT
+#define KEY_SELECT_CHANGE   ENUM_KEY_MODE
+#define KEY_CONFIRM         ENUM_KEY_KEEP
+
 
 
 /**********************************************
@@ -20,13 +23,13 @@ SemaphoreHandle_t sema_binary_keys = NULL;
 SemaphoreHandle_t muxtex_handler_keys_now = NULL;
 
 /* Timer */
-TimerHandle_t timer_drawTT  = NULL;
-TimerHandle_t timer_drawGIF = NULL;
+// TimerHandle_t timer_drawTT  = NULL;
+// TimerHandle_t timer_drawGIF = NULL;
 
 /* Global variables */
 uint8_t key_num_now = ENUM_NO_KEY_NOW;
-uint8_t _counter_dtt        = 0;
-uint8_t _counter_drawGIF    = 0;
+// uint8_t _counter_dtt        = 0;
+// uint8_t _counter_drawGIF    = 0;
 
 
 /**********************************************
@@ -48,26 +51,26 @@ uint8_t TaskFunc_GetKey( void )
 **********************************************/
 
 
-void _Timer_TaskAll_Callback( TimerHandle_t _timer )
-{
-    uint32_t id = ( uint32_t )pvTimerGetTimerID( _timer );
+// void _Timer_TaskAll_Callback( TimerHandle_t _timer )
+// {
+//     uint32_t id = ( uint32_t )pvTimerGetTimerID( _timer );
     
-    if( id == TIMER_ID_DRAW_TT )
-    {
-        _counter_dtt++;
-        if( _counter_dtt >= 100 )
-        {
-            _counter_dtt = 0;
-        }
-    }
+//     if( id == TIMER_ID_DRAW_TT )
+//     {
+//         _counter_dtt++;
+//         if( _counter_dtt >= 100 )
+//         {
+//             _counter_dtt = 0;
+//         }
+//     }
 
-    if( id == TIMER_ID_DRAW_GIF )
-    {
-        _counter_drawGIF++;
-        if( _counter_drawGIF >= 254 )
-        {  _counter_drawGIF = 0; }
-    }
-}
+//     if( id == TIMER_ID_DRAW_GIF )
+//     {
+//         _counter_drawGIF++;
+//         if( _counter_drawGIF >= 254 )
+//         {  _counter_drawGIF = 0; }
+//     }
+// }
 
 /**********************************************
     Task 
@@ -77,11 +80,10 @@ void _Timer_TaskAll_Callback( TimerHandle_t _timer )
 void Task_DrawGif( void* args )
 {
     /* 用于判断是否为第一次进入页面 被创建后进入循环和切换页面进入循环都属于第一次进入页面 需要刷新加载静态的内容 */
-    static uint8_t _first_loop_flag = pdTRUE;
-    uint8_t _last_counter = _counter_drawGIF;
+    static uint8_t  _first_loop_flag    = pdTRUE;
     /* 500ms刷新一帧 刷新间隔过低无法正常显示 */
-    timer_drawGIF = xTimerCreate( "TimerDrawGIF", pdMS_TO_TICKS( 500 ), pdTRUE, 
-                                (void*)TIMER_ID_DRAW_GIF, _Timer_TaskAll_Callback );
+    static uint32_t _last_counter       = 0;
+    uint32_t pic_counter = 0;
     
     for(;;)
     {
@@ -89,15 +91,17 @@ void Task_DrawGif( void* args )
         {
             _first_loop_flag = pdFALSE;
             DrawDinosaurGIF();                  /* Init */
-            xTimerStart( timer_drawGIF, 10 );
+            _last_counter = 0;
         }
 
-        /* 不相等说明已经更新 画下一帧 */
-        if( _last_counter != _counter_drawGIF )
+        /* 当前Tick减去之前的Tick大于规定的间隔 画下一帧 */
+        if( pdMS_TO_TICKS( PIC_FLUSH_TIME_GAP_MS ) <  xTaskGetTickCount() - _last_counter  )
         {
             /* 更新当前值 */
-            _last_counter = _counter_drawGIF;
-            if( _last_counter % 2 == 1 )
+            _last_counter = xTaskGetTickCount();
+            pic_counter++;
+
+            if( pic_counter % 2 == 1 )
             {
                 my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
                 my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_2, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
@@ -110,16 +114,7 @@ void Task_DrawGif( void* args )
             my_display.nextPage();
         }
 
-        /* 检测按键换页 */
-        uint8_t temp_key = TaskFunc_GetKey();
-        if( temp_key == KEY_NEXT_PAGE )
-        {
-            _first_loop_flag = pdTRUE;
-            xTimerStop( timer_drawGIF, 0 );
-            vTaskResume( THt_DrawTT );
-            vTaskSuspend( NULL );
-        }
-        vTaskDelay( pdMS_TO_TICKS( 20 ) );
+        ChangeTask( THt_DrawTT, &_first_loop_flag );
     }
     return;
 }
@@ -131,12 +126,9 @@ void Task_DrawGif( void* args )
 void Task_DrawTestText( void* args )
 {
     static uint8_t _first_loop_flag = pdTRUE;
-    uint8_t _last_counter = _counter_dtt;
+    uint32_t _last_counter = 0;                  /* 记录Tick值 */
     String _string_dtt_show = "牢大今年";
-    
-    timer_drawTT = xTimerCreate( "TimerDTT", pdMS_TO_TICKS( 1000 ), pdTRUE, 
-                                    (void*)TIMER_ID_DRAW_TT, _Timer_TaskAll_Callback );    
-    
+    uint32_t flush_counter = 0;
 
     for(;;)
     {
@@ -144,35 +136,76 @@ void Task_DrawTestText( void* args )
         {
             _first_loop_flag = pdFALSE;
             DrawTestText();             /* Init */        
-            xTimerStart( timer_drawTT, 10 );
+            _last_counter = 0;
         }
-
-        if( _last_counter != _counter_dtt )
+        
+        /* 一秒钟刷新一次 */
+        if( pdMS_TO_TICKS( PIC_FLUSH_TIME_GAP_MS*2 ) < (xTaskGetTickCount() - _last_counter) )
         {        
-            _last_counter = _counter_dtt;
+            _last_counter = xTaskGetTickCount();
+            flush_counter++;
+
             my_display.fillRect( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y, PAGE_TEXT_PARTIAL_WIDTH, PAGE_TEXT_PARTIAL_HEIGHT, GxEPD_WHITE );
             my_u8g2_fonts.setCursor( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y );
-            _string_dtt_show += _last_counter;
+
+            _string_dtt_show += flush_counter;
             _string_dtt_show += "岁了";
+
             my_u8g2_fonts.print( _string_dtt_show );
             _string_dtt_show = "牢大今年";
             Serial.println( "DTT is running...\n" );
             my_display.nextPage();
         }
 
-        uint8_t temp_key = TaskFunc_GetKey();
-        if( temp_key == KEY_NEXT_PAGE )
+        ChangeTask( THt_DrawGIF, &_first_loop_flag );
+    }
+}
+
+/* 选择配网或无网界面 */
+void Task_Select( void* args )
+{
+    static uint8_t first_loop_flag = pdTRUE;
+    TaskHandle_t task_to_change = NULL;
+    uint8_t mode_now = 1;
+
+    for(;;)
+    {
+        if(  pdTRUE == first_loop_flag )
         {
-            _first_loop_flag = pdTRUE;
-            xTimerStop( timer_drawTT, 0 );
-            vTaskResume( THt_DrawGIF );
-            vTaskSuspend( NULL );
+            first_loop_flag = pdFALSE;
+            mode_now = 1;
+            DrawSelectPage();
+        }
+
+        DrawSelectPageLoop( mode_now );
+
+        uint8_t temp_key = TaskFunc_GetKey();
+        Serial.printf( "Now is %d\n", temp_key );
+        if( temp_key == KEY_SELECT_CHANGE )
+        {
+            if( mode_now < 2 )  
+                mode_now++;
+            else 
+                mode_now = 1;
+        }
+        else if( temp_key == KEY_CONFIRM )
+        {
+            switch ( mode_now )
+            {
+            case 1:
+                vTaskResume( THt_DrawGIF );
+                vTaskSuspend( NULL );
+                break;
+            
+            case 2:
+                vTaskResume( THt_DrawTT );
+                vTaskSuspend( NULL );
+                break;
+            }
         }
         
-        vTaskDelay( pdMS_TO_TICKS( 20 ) );
+        
     }
-
-    return;
 }
 
 /* 按键测试打印任务 */
@@ -231,16 +264,17 @@ void Task_KeyDetect( void* args )
     }
 }
 
-/* 选择配网任务 */
-
-void Task_ConfigWeb( void )
+/* 检测按钮&切换任务 每个任务之后都有切换到下一个任务的重复代码 封装成函数 */
+void ChangeTask( TaskHandle_t task_resume, uint8_t* first_flag )
 {
-
-    for(;;)
+    uint8_t temp_key = TaskFunc_GetKey();
+    if( temp_key == KEY_NEXT_PAGE )
     {
-
+        *first_flag = pdTRUE;
+        vTaskResume( task_resume );
+        vTaskSuspend( NULL );
+        vTaskDelay( pdMS_TO_TICKS( 20 ) );
     }
-
     return;
 }
 

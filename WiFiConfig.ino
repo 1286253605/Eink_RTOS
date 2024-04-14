@@ -268,7 +268,7 @@ bool CheckWiFiConfigInFlash( void )
 
 void WiFi_Init( void )
 {
-    if( True == CheckWiFiConfigInFlash() )
+    if( true == CheckWiFiConfigInFlash() )
     {
         /* 如果Flash中有WiFi就进行链接 */
         WiFi.begin( target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
