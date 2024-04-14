@@ -48,7 +48,8 @@ void SystemSoftwareInit( void )
     
     /* 只启动必要任务和主页面任务 其他任务直接挂起等待页面切换 */
     vTaskSuspend( THt_DrawTT );
-    vTaskSuspend( THt_DrawGIF );
+    vTaskSuspend( THt_DrawSelect );
+    // vTaskSuspend( THt_DrawGIF );
     return;
 }
 

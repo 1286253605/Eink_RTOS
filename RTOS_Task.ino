@@ -7,7 +7,7 @@
 #include "Eink_Arduinov1.h"
 #include "Root_Page.h"
 #include "WiFiConfig.h"
-
+#include "WiFi.h"
 
 #define KEY_NEXT_PAGE       ENUM_KEY_BOOT
 #define KEY_SELECT_CHANGE   ENUM_KEY_MODE
@@ -76,7 +76,7 @@ uint8_t TaskFunc_GetKey( void )
     Task 
 **********************************************/
 
-/* 画Gif任务 */
+/* 画Gif任务 & 配网 */
 void Task_DrawGif( void* args )
 {
     /* 用于判断是否为第一次进入页面 被创建后进入循环和切换页面进入循环都属于第一次进入页面 需要刷新加载静态的内容 */
@@ -85,13 +85,49 @@ void Task_DrawGif( void* args )
     static uint32_t _last_counter       = 0;
     uint32_t pic_counter = 0;
     
+    /* 配网相关 */
+    boolean config_flag = false;
+    uint32_t tick_start = 0;
+
+    config_flag = CheckWiFiConfigInFlash();
+    if( config_flag )   WiFi.begin( target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
+    
     for(;;)
     {
         if( _first_loop_flag == pdTRUE )
         {
             _first_loop_flag = pdFALSE;
-            DrawDinosaurGIF();                  /* Init */
+            DrawDinosaurGIF();                              /* Init */
             _last_counter = 0;
+            tick_start = xTaskGetTickCount();
+        }
+
+        if( config_flag )                                   /* 如果Flash中有WiFi信息则进行连接 */
+        {
+            if( WiFi.status() == WL_CONNECTED )             /* 检查WiFi连接状态 */
+            {
+                // vTaskResume()                            /* 进入功能界面 */
+                vTaskResume( THt_DrawSelect );
+                vTaskSuspend( NULL );
+            }
+            else                                            /* 没连上 */
+            {
+                /* 15s时间内没连接上 进入配网界面 */
+                if( ( xTaskGetTickCount() - tick_start ) > pdMS_TO_TICKS( 15000 ) )
+                {
+                    vTaskResume( THt_DrawSelect );
+                    vTaskSuspend( NULL );
+                }
+            }
+        }
+        else                                                /* Flash中没有WiFi信息 直接进入配网选择页面 */
+        {
+            my_u8g2_fonts.setCursor( 10 , DINOSAUR_POS_Y + 100 );
+            my_u8g2_fonts.print( "未配置WiFi 进入配置页面中 :P" );
+            my_display.nextPage();
+            vTaskDelay( pdMS_TO_TICKS( 3000 ) );
+            vTaskResume( THt_DrawSelect );
+            vTaskSuspend( NULL );
         }
 
         /* 当前Tick减去之前的Tick大于规定的间隔 画下一帧 */
@@ -114,7 +150,8 @@ void Task_DrawGif( void* args )
             my_display.nextPage();
         }
 
-        ChangeTask( THt_DrawTT, &_first_loop_flag );
+        // ChangeTask( THt_DrawTT, &_first_loop_flag );
+        vTaskDelay( pdMS_TO_TICKS( 50 ) );
     }
     return;
 }
@@ -192,12 +229,12 @@ void Task_Select( void* args )
         {
             switch ( mode_now )
             {
-            case 1:
+            case 1:/* 配网 */
                 vTaskResume( THt_DrawGIF );
                 vTaskSuspend( NULL );
                 break;
             
-            case 2:
+            case 2:/* 无网展示模式 */
                 vTaskResume( THt_DrawTT );
                 vTaskSuspend( NULL );
                 break;

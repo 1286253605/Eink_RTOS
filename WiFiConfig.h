@@ -19,4 +19,7 @@ bool CheckWiFiConfigInFlash( void );
 void WiFi_Init( void );
 /**************************************************************************************/
 
+extern String target_wifi_ssid;
+extern String target_wifi_passwd;
+
 #endif

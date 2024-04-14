@@ -56,13 +56,11 @@ void DrawDinosaurGIF( void )
 {
     my_display.setFullWindow();
     my_display.fillScreen( GxEPD_WHITE );
-    my_u8g2_fonts.setCursor( 0, 185 );
-    my_u8g2_fonts.print("原神,启动!");
 
     my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
     my_display.nextPage();
 
-    my_display.setPartialWindow( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH );
+    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
 
     return;
 }
@@ -98,7 +96,7 @@ void DrawSelectPage( void )
 
 void DrawSelectPageLoop( uint8_t mode_now )
 {
-    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
+    // my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
     /* 开了局部刷新但是需要将全屏刷新为白 否则框会留痕迹 局刷不会闪屏 */
     my_display.fillRect( 0, 0, my_display.width(), my_display.height(), GxEPD_WHITE );
     my_display.fillRect( /*x*/0, /*y*/20*mode_now - 16, /*w*/128, /*h*/24, /*c*/GxEPD_BLACK );
