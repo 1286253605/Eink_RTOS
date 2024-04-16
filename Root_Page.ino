@@ -114,3 +114,39 @@ void DrawSelectPageLoop( uint8_t mode_now )
 
     my_display.nextPage();
 }
+
+void DrawWebserverPage( void )
+{
+    my_display.setFullWindow();
+    my_display.fillScreen( GxEPD_WHITE );
+    /* 划分局部刷新窗口 */
+    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
+    my_display.drawInvertedBitmap( DINOSAUR_POS_X, 15, pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
+    
+    my_u8g2_fonts.setCursor( DINOSAUR_POS_X - 30, 15 + 75 );
+    my_u8g2_fonts.print( "正在启动服务器..." );
+
+    my_display.nextPage();
+    return;
+}
+
+void DrawDinosaurGIF( uint8_t counter, uint16_t x, uint16_t y )
+{
+    if( counter % 2 == 1 )
+    {
+        my_display.fillRect( x, y,
+                    DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
+        my_display.drawInvertedBitmap( x, y, 
+                    pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
+    }
+    else
+    {
+        my_display.fillRect( x, y, 
+                    DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
+        my_display.drawInvertedBitmap( x, y,
+                    pic_dinosaur_2, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
+    }
+    my_display.nextPage();
+
+    return;
+}

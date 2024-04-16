@@ -19,5 +19,7 @@ void DrawTestText( void );
 void DrawSelectPage( void );
 void DrawSelectPage( void );
 void DrawSelectPageLoop( uint8_t mode_now );
+void DrawWebserverPage( void );
+void DrawDinosaurGIF( uint8_t counter, uint16_t x, uint16_t y );
 
 #endif

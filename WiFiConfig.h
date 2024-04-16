@@ -17,7 +17,10 @@ void WIFI_HTMLNotFoundPage( void );
 String urlDecode(String input);
 bool CheckWiFiConfigInFlash( void );
 void WiFi_Init( void );
+void WebseverLoop( void );
 /**************************************************************************************/
+
+
 
 extern String target_wifi_ssid;
 extern String target_wifi_passwd;

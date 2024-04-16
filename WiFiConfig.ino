@@ -27,6 +27,13 @@ void SetupConfig( void )
     return;
 }
 
+void WebseverLoop( void )
+{
+    my_dnsserver.processNextRequest();
+    my_webserver.handleClient();
+    return;
+}
+
 void WiFiScan( void )
 {
     /* 使用终端模式 STA  作为连接WIFI的设备扫描当前环境所有的WIFI */
@@ -59,8 +66,8 @@ void StartWebServer( void )
 
     Serial.print( "Config Web Server :" );
     Serial.println( WiFi.localIP() );
-    my_webserver.on( "/settings", WIFI_HTMLSettingsPage );
-    my_webserver.on( "/", WIFI_HTMLRootPage );
+    my_webserver.on( "/settings", WIFI_HTMLRootPage );
+    my_webserver.on( "/", WIFI_HTMLSettingsPage );
     my_webserver.on( "/setap", WIFI_HTMLSetap );
     my_webserver.onNotFound( WIFI_HTMLNotFoundPage );
 
@@ -80,7 +87,7 @@ String MakeHTMLPage( String title, String contents )
     return s;
 }
 
-/* Page / */
+/* Page "/settings" */
 void WIFI_HTMLRootPage( void )
 {
     String s = "<head><meta charset=\"utf-8\"><h1>配置界面</h1><p>仅永久保存心知密钥</p>";
@@ -93,7 +100,7 @@ void WIFI_HTMLRootPage( void )
     my_webserver.send( 200, "text/html", MakeHTMLPage( "配置界面", s ) );
 }
 
-/* Page /settings */
+/* Page "/" */
 void WIFI_HTMLSettingsPage( void )
 {
     String s = "<head><meta charset=\"utf-8\"></head><h1>Wi-Fi配置</h1><p>请在选择WiFi名称后输入对应的WiFi密码</p>";
@@ -107,7 +114,7 @@ void WIFI_HTMLSettingsPage( void )
 }
 
 // ! todo ->  restart
-/* Page /setap */
+/* Page "/setap" */
 void WIFI_HTMLSetap( void )
 {
     /* 清空数据再写入 但是不清除心知天气密钥 */

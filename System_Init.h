@@ -14,6 +14,7 @@ extern GxEPD2_BW<GxEPD2_154, GxEPD2_154::HEIGHT> my_display;
 extern TaskHandle_t THt_DrawTT;
 extern TaskHandle_t THt_DrawGIF;
 extern TaskHandle_t THt_DrawSelect;
+extern TaskHandle_t THt_TaskWebserver;
 
 void SystemHardwareInit( void );
 void SystemSoftwareInit( void );

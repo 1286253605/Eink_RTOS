@@ -136,18 +136,18 @@ void Task_DrawGif( void* args )
             /* 更新当前值 */
             _last_counter = xTaskGetTickCount();
             pic_counter++;
-
-            if( pic_counter % 2 == 1 )
-            {
-                my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
-                my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_2, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
-            }
-            else
-            {
-                my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
-                my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
-            }
-            my_display.nextPage();
+            DrawDinosaurGIF( pic_counter, DINOSAUR_POS_X, DINOSAUR_POS_Y );
+            // if( pic_counter % 2 == 1 )
+            // {
+            //     my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
+            //     my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_2, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
+            // }
+            // else
+            // {
+            //     my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
+            //     my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
+            // }
+            // my_display.nextPage();
         }
 
         // ChangeTask( THt_DrawTT, &_first_loop_flag );
@@ -229,15 +229,15 @@ void Task_Select( void* args )
         {
             switch ( mode_now )
             {
-            case 1:/* 配网 */
-                vTaskResume( THt_DrawGIF );
-                vTaskSuspend( NULL );
-                break;
-            
-            case 2:/* 无网展示模式 */
-                vTaskResume( THt_DrawTT );
-                vTaskSuspend( NULL );
-                break;
+                case 1:/* 配网 */
+                    vTaskResume( THt_TaskWebserver );
+                    vTaskSuspend( NULL );
+                    break;
+                
+                case 2:/* 无网展示模式 */
+                    vTaskResume( THt_DrawTT );
+                    vTaskSuspend( NULL );
+                    break;
             }
         }
         
@@ -298,6 +298,32 @@ void Task_KeyDetect( void* args )
 
             xSemaphoreGive( muxtex_handler_keys_now );
         }
+    }
+}
+
+/* 配网服务器任务 */
+void Task_Webserver( void* arg )
+{
+    uint32_t last_counter = 0;
+    uint8_t pic_counter = 0;
+
+    DrawWebserverPage();
+    SetupConfig();
+
+    for(;;)
+    {
+        /* 没有客户机连接就直接跳过处理请求环节 */
+        if( WiFi.status() != WL_CONNECTED )
+        {
+            WebseverLoop();
+        }
+        if( pdMS_TO_TICKS( PIC_FLUSH_TIME_GAP_MS ) < xTaskGetTickCount() - last_counter )
+        {
+            last_counter = xTaskGetTickCount();
+            pic_counter++;
+            DrawDinosaurGIF( pic_counter, DINOSAUR_POS_X, 15 );
+        }
+
     }
 }
 
