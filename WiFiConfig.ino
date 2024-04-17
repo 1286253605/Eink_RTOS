@@ -90,11 +90,10 @@ String MakeHTMLPage( String title, String contents )
 /* Page "/settings" */
 void WIFI_HTMLRootPage( void )
 {
-    String s = "<head><meta charset=\"utf-8\"><h1>配置界面</h1><p>仅永久保存心知密钥</p>";
-    s += "<form method=\"get\" action=\"setconfig\"><br>心知密钥:<input name=\"authcode\" length=64 type=\"password\">";
-    s += "<br>NTP服务器:<input name=\"ntpServer\" length=64 type=\"password\">";  
-    s += "<br>时区:<input name=\"timezone_offset\" length=64 type=\"password\">";         
-    s += "<br>诗词Token:<input name=\"token\" length=64 type=\"password\"><br><br>";    
+    String s = "<head><meta charset=\"utf-8\"></head>";
+    s += "<br><h1>配置界面</h1><br><form method=\"get\" action=\"setconfig\"><br>心知密钥:<input name=\"authcode\" length=64 type=\"text\">";
+    s += "<br>NTP服务器:<input name=\"ntpServer\" length=64 type=\"text\">";  
+    s += "<br>时区:<input name=\"timezone_offset\" length=64 type=\"text\">";         
     s += "<input name=\"保存并提交\"  type=\"submit\"></form>";  
 
     my_webserver.send( 200, "text/html", MakeHTMLPage( "配置界面", s ) );
@@ -114,12 +113,13 @@ void WIFI_HTMLSettingsPage( void )
 }
 
 // ! todo ->  restart
-/* Page "/setap" */
+/* "/setap" */
 void WIFI_HTMLSetap( void )
 {
     /* 清空数据再写入 但是不清除心知天气密钥 */
     for( uint32_t i = 4000; i < 4064; i++ )
     {
+        /* EEPROM库对象默认大小为4096字节 0~4095 */
         EEPROM.begin( 4096 );
         EEPROM.write( i, 0 );
         EEPROM.commit();
@@ -135,7 +135,7 @@ void WIFI_HTMLSetap( void )
     Serial.print( "authcode:\t" );      
     Serial.println( target_site_authcode );
 
-    /*******************WIFISSID和Password写入Flash中*******************/
+    /*******************WIFISSID和Password写入Flash中 32+32字节*******************/
     for( uint8_t i = 0; i < target_wifi_ssid.length(); i++ )
     {
         EEPROM.begin( 4096 );
@@ -150,7 +150,7 @@ void WIFI_HTMLSetap( void )
         EEPROM.commit();
     }
 
-    /*******************心知天气密钥写入Flash*******************/
+    /*******************心知天气密钥写入Flash 64字节*******************/
     if( target_site_authcode != "" )
     {
         /* 先清除后写入 */
