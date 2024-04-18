@@ -5,6 +5,7 @@
 #include <HTTPClient.h>
 // #include <esp_wifi.h>
 #include "WiFiConfig.h"
+#include "html_css.h"
 
 /* Global Variables */
 String ssid_list = "";
@@ -78,10 +79,10 @@ void StartWebServer( void )
 String MakeHTMLPage( String title, String contents )
 {
     String s = "<!DOCTYPE html><html><head>";
-    s += "<meta name=\"viewport\" content=\"width=device-width,user-scalable=0\">";
+    s += "<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,user-scalable=0\">";
     s += "<title>";
     s += title;
-    s += "</title></head><body>";
+    s += "</title>";
     s += contents;
     s += "</body></html>";
     return s;
@@ -90,11 +91,20 @@ String MakeHTMLPage( String title, String contents )
 /* Page "/settings" */
 void WIFI_HTMLRootPage( void )
 {
-    String s = "<head><meta charset=\"utf-8\"></head>";
+    String s = "";
+    s += "<style>";
+    s += style_css_input_select;
+    s += style_css_button;
+    s += style_css_body;
+    s += "</style>";
+    s += "</head><body>";
+    s += "<div>";
     s += "<br><h1>配置界面</h1><br><form method=\"get\" action=\"setconfig\"><br>心知密钥:<input name=\"authcode\" length=64 type=\"text\">";
     s += "<br>NTP服务器:<input name=\"ntpServer\" length=64 type=\"text\">";  
     s += "<br>时区:<input name=\"timezone_offset\" length=64 type=\"text\">";         
-    s += "<input name=\"保存并提交\"  type=\"submit\"></form>";  
+    s += "<input name=\"保存并提交\"  type=\"submit\" value=\"提交\"></form>"; 
+    s += "<br><a href=\"/\"><button>跳转到配置WiFi页面</button></a>";
+    s += "</div>";
 
     my_webserver.send( 200, "text/html", MakeHTMLPage( "配置界面", s ) );
 }
@@ -102,13 +112,23 @@ void WIFI_HTMLRootPage( void )
 /* Page "/" */
 void WIFI_HTMLSettingsPage( void )
 {
-    String s = "<head><meta charset=\"utf-8\"></head><h1>Wi-Fi配置</h1><p>请在选择WiFi名称后输入对应的WiFi密码</p>";
+    String s = "";
+    s += "<style>";
+    s += style_css_input_select;
+    s += style_css_button;
+    s += style_css_body;
+    s += "</style>";
+    s += "</head><body>";
+    s += "<div>";
+    s += "<h1>Wi-Fi配置</h1><p>请在选择WiFi名称后输入对应的WiFi密码</p>";
     s += "<form method=\"get\" action=\"setap\"><label>网络:</label><select name=\"ssid\">";
     s += ssid_list;
     s += "</select><br>密码:<input name=\"pass\" length=64 type=\"password\">";
     s += "<p>首次使用务必填写心知密钥</p>";
     s += "<form method=\"get\" action=\"setconfig\">心知密钥:<input name=\"authcode\" length=64 type=\"password\"><br>";
-    s += "<input name=\"保存并提交\"  type=\"submit\"></form>";
+    s += "<input name=\"保存并提交\"  type=\"submit\" value=\"提交\"></form>";
+    s += "<br><a href=\"/settings\"><button>跳转到配置各种参数页面</button></a>";
+    s += "</div>";
     my_webserver.send(200, "text/html", MakeHTMLPage("Wi-Fi配置", s)); 
 }
 
@@ -177,14 +197,20 @@ void WIFI_HTMLSetap( void )
     s += "\"";
     my_webserver.send( 200, "text/html", MakeHTMLPage( "WiFi配置", s ) );
 
-    // ESP.restart();
+    ESP.restart();
 }
 
 /* Page Notfound */
 void WIFI_HTMLNotFoundPage( void )
 {
     /* 配置超链接跳转到配网Settings页面 */
-    String s = "<head><meta charset=\"utf-8\"></head><h1>配网模式</h1><p><a href=\"/settings\">点击配网</a></p>";
+    String s = "";
+    s += "<style>";
+    s += style_css_button;
+    s += style_css_body;
+    s += "</style>";
+    s += "</head><body>";
+    s += "<div><h1>配网模式</h1><p><a href=\"/\">点击配网</a></p></div>";
     my_webserver.send( 200, "text/html", MakeHTMLPage( "配网模式", s ) );
 }
 

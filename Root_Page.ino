@@ -88,6 +88,8 @@ void DrawSelectPage( void )
 {
     my_display.setFullWindow();
     my_display.fillScreen( GxEPD_WHITE );
+    my_display.fillScreen( GxEPD_BLACK );
+    my_display.fillScreen( GxEPD_WHITE );
     /* 划分局部刷新窗口 */
     my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
     my_display.nextPage();
