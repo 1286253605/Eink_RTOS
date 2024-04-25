@@ -12,6 +12,7 @@ void Task_Print( void* args );
 void Task_KeyDetect( void* args );
 void Task_DrawGif( void* args );
 void Task_Select( void* args );
+void Task_DrawWeather( void* args );
 uint8_t TaskFunc_GetKey( void );
 
 

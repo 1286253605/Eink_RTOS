@@ -4,7 +4,7 @@
 #include "System_Init.h"
 #include "RTOS_Task.h"
 #include "Eink_Arduinov1.h"
-
+#include "EEPROM.h"
 
 // FreeFonts from Adafruit_GFX
 
@@ -31,7 +31,6 @@ void SystemHardwareInit( void )
     Serial.begin( 115200 );
     _GPIOInit();
     _DisplayInit();
-
     return;
 }
 
@@ -43,7 +42,7 @@ void SystemSoftwareInit( void )
     // xTaskCreate( Task_Print,                "PRINT",    (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
     xTaskCreate( Task_KeyDetect,            "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL                );
     xTaskCreate( Task_DrawGif,              "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    &THt_DrawGIF        );
-    xTaskCreate( Task_DrawTestText,         "DTT",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawTT         );
+    xTaskCreate( Task_DrawTestText,         "DTT",      (1024)*8,   NULL,   IDLE_PRIORITY+1,    &THt_DrawTT         );
     xTaskCreate( Task_Select,               "SEL",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawSelect     );
     xTaskCreate( Task_Webserver,            "WEB",      (1024)*8,   NULL,   IDLE_PRIORITY+1,    &THt_TaskWebserver  );
 

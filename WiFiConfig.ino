@@ -6,6 +6,8 @@
 // #include <esp_wifi.h>
 #include "WiFiConfig.h"
 #include "html_css.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 /* Global Variables */
 String ssid_list = "";
@@ -123,9 +125,9 @@ void WIFI_HTMLSettingsPage( void )
     s += "<h1>Wi-Fi配置</h1><p>请在选择WiFi名称后输入对应的WiFi密码</p>";
     s += "<form method=\"get\" action=\"setap\"><label>网络:</label><select name=\"ssid\">";
     s += ssid_list;
-    s += "</select><br>密码:<input name=\"pass\" length=64 type=\"password\">";
+    s += "</select><br>密码:<input name=\"pass\" length=64 type=\"text\">";
     s += "<p>首次使用务必填写心知密钥</p>";
-    s += "<form method=\"get\" action=\"setconfig\">心知密钥:<input name=\"authcode\" length=64 type=\"password\"><br>";
+    s += "<form method=\"get\" action=\"setconfig\">心知密钥:<input name=\"authcode\" length=64 type=\"text\"><br>";
     s += "<input name=\"保存并提交\"  type=\"submit\" value=\"提交\"></form>";
     s += "<br><a href=\"/settings\"><button>跳转到配置各种参数页面</button></a>";
     s += "</div>";
@@ -196,7 +198,7 @@ void WIFI_HTMLSetap( void )
     s += target_wifi_ssid;
     s += "\"";
     my_webserver.send( 200, "text/html", MakeHTMLPage( "WiFi配置", s ) );
-
+    vTaskDelay( pdMS_TO_TICKS( 2000 ) );
     ESP.restart();
 }
 
@@ -257,9 +259,14 @@ bool CheckWiFiConfigInFlash( void )
     target_wifi_ssid    = "";
     target_wifi_passwd  = "";
     Serial.println( "Reading Flash..." );
-
+    /* 在读取之前需要初始化 */
+    // if( !EEPROM.begin( 4096 ) )
+    // {
+    //     Serial.println("EEPROM Init Failed...");
+    // }
+    // vTaskDelay( pdMS_TO_TICKS( 50 ) );
     /* 如果Flash中没有WiFi信息 函数直接返回false */
-    if( EEPROM.read( TARGET_SSID_ADDR ) == 0 )
+    if( EEPROM.read( TARGET_SSID_ADDR+2 ) == 0 )
     {
         Serial.printf( "No WiFi config in flash\n" );
         return false;

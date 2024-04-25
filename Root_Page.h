@@ -11,8 +11,8 @@
 #define PAGE_TEXT_PARTIAL_WIDTH         200
 #define PAGE_TEXT_PARTIAL_HEIGHT        20
 
-extern const unsigned char pic_dinosaur_1[];
-extern const unsigned char pic_dinosaur_2[];
+// extern const unsigned char pic_dinosaur_1[];
+// extern const unsigned char pic_dinosaur_2[];
 
 void DrawDinosaurGIF( void );
 void DrawTestText( void );

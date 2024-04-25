@@ -8,11 +8,14 @@
 #include "Root_Page.h"
 #include "WiFiConfig.h"
 #include "WiFi.h"
+#include "pic.h"
 
-#define KEY_NEXT_PAGE       ENUM_KEY_BOOT
-#define KEY_SELECT_CHANGE   ENUM_KEY_MODE
-#define KEY_CONFIRM         ENUM_KEY_KEEP
-
+/* 屏幕排线折叠 朝向屏幕右上方是MODE 右下方是KEEP */
+#define KEY_NEXT_PAGE               ENUM_KEY_BOOT
+#define KEY_SELECT_CHANGE           ENUM_KEY_MODE
+#define KEY_CONFIRM                 ENUM_KEY_KEEP
+#define KEY_FUNCTION_NEXT_PAGE      ENUM_KEY_MODE
+#define KEY_FUNCTION_CONFIRM        ENUM_KEY_KEEP
 
 
 /**********************************************
@@ -107,7 +110,7 @@ void Task_DrawGif( void* args )
             if( WiFi.status() == WL_CONNECTED )             /* 检查WiFi连接状态 */
             {
                 // vTaskResume()                            /* 进入功能界面 */
-                vTaskResume( THt_DrawSelect );
+                vTaskResume( THt_DrawTT );
                 vTaskSuspend( NULL );
             }
             else                                            /* 没连上 */
@@ -137,17 +140,6 @@ void Task_DrawGif( void* args )
             _last_counter = xTaskGetTickCount();
             pic_counter++;
             DrawDinosaurGIF( pic_counter, DINOSAUR_POS_X, DINOSAUR_POS_Y );
-            // if( pic_counter % 2 == 1 )
-            // {
-            //     my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
-            //     my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_2, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
-            // }
-            // else
-            // {
-            //     my_display.fillRect( DINOSAUR_POS_X, DINOSAUR_POS_Y, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_WHITE );
-            //     my_display.drawInvertedBitmap( DINOSAUR_POS_X, DINOSAUR_POS_Y, pic_dinosaur_1, DINOSAUR_WIDTH, DINOSAUR_HEIGH, GxEPD_BLACK );
-            // }
-            // my_display.nextPage();
         }
 
         // ChangeTask( THt_DrawTT, &_first_loop_flag );
@@ -159,42 +151,65 @@ void Task_DrawGif( void* args )
 
 
 
-/* 打印测试文本任务 */
+/* 展示图片任务 懒得改任务名了  */
 void Task_DrawTestText( void* args )
 {
     static uint8_t _first_loop_flag = pdTRUE;
-    uint32_t _last_counter = 0;                  /* 记录Tick值 */
-    String _string_dtt_show = "牢大今年";
-    uint32_t flush_counter = 0;
+    static uint8_t pic_now      = 0;
+    static uint8_t pic_before   = 0;
 
     for(;;)
     {
         if( _first_loop_flag == pdTRUE )
         {
             _first_loop_flag = pdFALSE;
-            DrawTestText();             /* Init */        
-            _last_counter = 0;
+            DrawTestText();
+        }
+        if( pic_before != pic_now ) 
+        {
+            PicShowInPage( pic_now );
+            pic_before = pic_now;
+        }
+
+        uint8_t temp_key = TaskFunc_GetKey();
+        /* 画下一张图片 */
+        if( temp_key == KEY_FUNCTION_CONFIRM )
+        {
+            pic_now++;
+            if( pic_now >= PIC_MAX_NUM) pic_now = 0;
+            vTaskDelay( pdMS_TO_TICKS( 20 ) );
+        }
+        if( temp_key == KEY_FUNCTION_NEXT_PAGE )
+        {
+            // vTaskResume()
+            // vTaskSuspend( NULL );
+            vTaskDelay( pdMS_TO_TICKS( 20 ) );
+            _first_loop_flag = pdTRUE;
+        }
+    }
+}
+
+/* 天气界面任务 */
+void Task_DrawWeather( void* args )
+{
+    static uint8_t first_loop_flag = pdTRUE;
+    for(;;)
+    {
+        if(  pdTRUE == first_loop_flag )
+        {
+			first_loop_flag = pdFALSE;
+
+        }
+
+        uint8_t temp_key = TaskFunc_GetKey();
+        if( temp_key == KEY_FUNCTION_NEXT_PAGE )
+        {
+            // vTaskResume()
+            vTaskSuspend( NULL );
+            vTaskDelay( pdMS_TO_TICKS( 20 ) );
+            first_loop_flag = pdTRUE;
         }
         
-        /* 一秒钟刷新一次 */
-        if( pdMS_TO_TICKS( PIC_FLUSH_TIME_GAP_MS*2 ) < (xTaskGetTickCount() - _last_counter) )
-        {        
-            _last_counter = xTaskGetTickCount();
-            flush_counter++;
-
-            my_display.fillRect( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y, PAGE_TEXT_PARTIAL_WIDTH, PAGE_TEXT_PARTIAL_HEIGHT, GxEPD_WHITE );
-            my_u8g2_fonts.setCursor( PAGE_TEXT_PARTIAL_POS_X, PAGE_TEXT_PARTIAL_POS_Y );
-
-            _string_dtt_show += flush_counter;
-            _string_dtt_show += "岁了";
-
-            my_u8g2_fonts.print( _string_dtt_show );
-            _string_dtt_show = "牢大今年";
-            Serial.println( "DTT is running...\n" );
-            my_display.nextPage();
-        }
-
-        ChangeTask( THt_DrawGIF, &_first_loop_flag );
     }
 }
 
@@ -217,7 +232,7 @@ void Task_Select( void* args )
         DrawSelectPageLoop( mode_now );
 
         uint8_t temp_key = TaskFunc_GetKey();
-        Serial.printf( "Now is %d\n", temp_key );
+
         if( temp_key == KEY_SELECT_CHANGE )
         {
             if( mode_now < 2 )  
