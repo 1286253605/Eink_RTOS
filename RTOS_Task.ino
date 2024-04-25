@@ -116,7 +116,7 @@ void Task_DrawGif( void* args )
             else                                            /* 没连上 */
             {
                 /* 15s时间内没连接上 进入配网界面 */
-                if( ( xTaskGetTickCount() - tick_start ) > pdMS_TO_TICKS( 15000 ) )
+                if( ( xTaskGetTickCount() - tick_start ) > pdMS_TO_TICKS( 30000 ) )
                 {
                     vTaskResume( THt_DrawSelect );
                     vTaskSuspend( NULL );

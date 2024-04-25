@@ -126,8 +126,8 @@ void WIFI_HTMLSettingsPage( void )
     s += "<form method=\"get\" action=\"setap\"><label>网络:</label><select name=\"ssid\">";
     s += ssid_list;
     s += "</select><br>密码:<input name=\"pass\" length=64 type=\"text\">";
-    s += "<p>首次使用务必填写心知密钥</p>";
-    s += "<form method=\"get\" action=\"setconfig\">心知密钥:<input name=\"authcode\" length=64 type=\"text\"><br>";
+    // s += "<p>首次使用务必填写心知密钥</p>";
+    // s += "<form method=\"get\" action=\"setconfig\">心知密钥:<input name=\"authcode\" length=64 type=\"text\"><br>";
     s += "<input name=\"保存并提交\"  type=\"submit\" value=\"提交\"></form>";
     s += "<br><a href=\"/settings\"><button>跳转到配置各种参数页面</button></a>";
     s += "</div>";
@@ -157,11 +157,13 @@ void WIFI_HTMLSetap( void )
     Serial.print( "authcode:\t" );      
     Serial.println( target_site_authcode );
 
+    
     /*******************WIFISSID和Password写入Flash中 32+32字节*******************/
     for( uint8_t i = 0; i < target_wifi_ssid.length(); i++ )
     {
         EEPROM.begin( 4096 );
         EEPROM.write( TARGET_SSID_ADDR + i, target_wifi_ssid[ i ] );
+        Serial.printf("char %d is %c\n", i, EEPROM.read( TARGET_SSID_ADDR + i ));
         EEPROM.commit();
     }
 
@@ -171,28 +173,41 @@ void WIFI_HTMLSetap( void )
         EEPROM.write( TARGET_PASSWD_ADDR + i, target_wifi_passwd[ i ] );
         EEPROM.commit();
     }
-
+    
     /*******************心知天气密钥写入Flash 64字节*******************/
-    if( target_site_authcode != "" )
-    {
-        /* 先清除后写入 */
-        for( uint32_t i = TARGET_AUTH_ADDR; i < 4096; i++ )
-        {
-            EEPROM.begin( 4096 );
-            EEPROM.write( i, 0 );
-            EEPROM.commit();
-        }
+    // if( target_site_authcode != "" )
+    // {
+    //     /* 先清除后写入 */
+    //     for( uint32_t i = TARGET_AUTH_ADDR; i < 4096; i++ )
+    //     {
+    //         EEPROM.begin( 4096 );
+    //         EEPROM.write( i, 0 );
+    //         EEPROM.commit();
+    //     }
 
-        for( uint32_t i = TARGET_AUTH_ADDR; i < target_site_authcode.length(); i++ )
-        {
-            EEPROM.begin( 4096 );
-            EEPROM.write( TARGET_AUTH_ADDR + i, target_site_authcode[ i ] );
-            EEPROM.commit();
-        }
+    //     for( uint32_t i = TARGET_AUTH_ADDR; i < target_site_authcode.length(); i++ )
+    //     {
+    //         EEPROM.begin( 4096 );
+    //         EEPROM.write( TARGET_AUTH_ADDR + i, target_site_authcode[ i ] );
+    //         EEPROM.commit();
+    //     }
 
-        Serial.println( "Write AUTH to flash done" );
-    }
+    //     Serial.println( "Write AUTH to flash done" );
+    // }
+
+    // EEPROM.commit();
     EEPROM.end();
+    // EEPROM.begin(4096);
+    // String test_str ="";
+    // for( uint8_t i = TARGET_SSID_ADDR; i < TARGET_SSID_ADDR + 32; i++ )
+    // {
+    //     char ch = EEPROM.read( i );
+    //     if( ch != 0 )
+    //     {
+    //         test_str += char( EEPROM.read( i ) );
+    //     }
+    // }
+    // Serial.printf( "Flash String :%s", test_str.c_str() );
 
     String s = "<head><meta charset=\"utf-8\"></head><h1>设置结束！</h1><p>设备即将在重启后接入 \"";
     s += target_wifi_ssid;
@@ -260,13 +275,21 @@ bool CheckWiFiConfigInFlash( void )
     target_wifi_passwd  = "";
     Serial.println( "Reading Flash..." );
     /* 在读取之前需要初始化 */
-    // if( !EEPROM.begin( 4096 ) )
-    // {
-    //     Serial.println("EEPROM Init Failed...");
-    // }
+    if( !EEPROM.begin( 4096 ) )
+    {
+        Serial.println("EEPROM Init Failed...");
+        return false;
+    }
     // vTaskDelay( pdMS_TO_TICKS( 50 ) );
     /* 如果Flash中没有WiFi信息 函数直接返回false */
-    if( EEPROM.read( TARGET_SSID_ADDR+2 ) == 0 )
+
+    // for( uint8_t i = 0; i < 100; i++ )
+    // {
+    //     Serial.printf("char %d is %d\n", i, EEPROM.read( TARGET_SSID_ADDR + i ));
+    //     vTaskDelay( pdMS_TO_TICKS(5) );
+    // }
+
+    if( EEPROM.read( TARGET_SSID_ADDR ) == 0 )
     {
         Serial.printf( "No WiFi config in flash\n" );
         return false;
@@ -275,7 +298,7 @@ bool CheckWiFiConfigInFlash( void )
     for( uint8_t i = TARGET_SSID_ADDR; i < TARGET_SSID_ADDR + 32; i++ )
     {
         char ch = EEPROM.read( i );
-        if( ch != 0 )
+        if( ( ch != 0 ) && ( ch != 255 ) )
         {
             target_wifi_ssid += char( EEPROM.read( i ) );
         }
@@ -285,22 +308,22 @@ bool CheckWiFiConfigInFlash( void )
     for( uint8_t i = TARGET_PASSWD_ADDR; i < TARGET_PASSWD_ADDR + 32; i++ )
     {
         char ch = EEPROM.read( i );
-        if( ch != 0 )
+        if( ( ch != 0 ) && ( ch != 255 ) )
         {
             target_wifi_passwd += char( EEPROM.read( i ) );
         }
     }
-    Serial.printf( "WiFi Passwd : %s\n", target_wifi_ssid );
+    Serial.printf( "WiFi Passwd : %s\n", target_wifi_passwd.c_str() );
 
-    for( uint8_t i = TARGET_AUTH_ADDR; i < TARGET_AUTH_ADDR + 64; i++  )
-    {
-        char ch = EEPROM.read( i );
-        if( ch != 0 )
-        {
-            target_site_authcode += char( EEPROM.read( i ) );
-        }
-    }
-    Serial.printf( "Auth code : %s\n", target_site_authcode );
+    // for( uint8_t i = TARGET_AUTH_ADDR; i < TARGET_AUTH_ADDR + 64; i++  )
+    // {
+    //     char ch = EEPROM.read( i );
+    //     if( ch != 0 )
+    //     {
+    //         target_site_authcode += char( EEPROM.read( i ) );
+    //     }
+    // }
+    // Serial.printf( "Auth code : %s\n", target_site_authcode );
 
     return true;
 }
@@ -311,6 +334,8 @@ void WiFi_Init( void )
     if( true == CheckWiFiConfigInFlash() )
     {
         /* 如果Flash中有WiFi就进行链接 */
+        Serial.printf( "Connecting SSID:%s, Passwd:%s", 
+                            target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
         WiFi.begin( target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
         /* 还需要再检查链接是否成功 WiFi.status() == WL_CONNECTED */
     }

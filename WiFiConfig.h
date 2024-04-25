@@ -1,9 +1,9 @@
 #ifndef _WIFICONFIG_H
 #define _WIFICONFIG_H
 
-#define TARGET_SSID_ADDR    4000
-#define TARGET_PASSWD_ADDR  4032
-#define TARGET_AUTH_ADDR    4064
+#define TARGET_SSID_ADDR    0
+#define TARGET_PASSWD_ADDR  32
+#define TARGET_AUTH_ADDR    64
 
 /* Function */
 /**************************************************************************************/
