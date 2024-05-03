@@ -9,6 +9,7 @@
 #include "WiFiConfig.h"
 #include "WiFi.h"
 #include "pic.h"
+#include "my_ntp.h"
 
 /* 屏幕排线折叠 朝向屏幕右上方是MODE 右下方是KEEP */
 #define KEY_NEXT_PAGE               ENUM_KEY_BOOT
@@ -110,6 +111,7 @@ void Task_DrawGif( void* args )
             if( WiFi.status() == WL_CONNECTED )             /* 检查WiFi连接状态 */
             {
                 // vTaskResume()                            /* 进入功能界面 */
+                ntp_init();
                 vTaskResume( THt_DrawTT );
                 vTaskSuspend( NULL );
             }

@@ -24,6 +24,7 @@ TaskHandle_t THt_DrawTT         = NULL;
 TaskHandle_t THt_DrawGIF        = NULL;
 TaskHandle_t THt_DrawSelect     = NULL;
 TaskHandle_t THt_TaskWebserver  = NULL;
+TaskHandle_t THt_TaskWeather    = NULL;
 
 
 void SystemHardwareInit( void )

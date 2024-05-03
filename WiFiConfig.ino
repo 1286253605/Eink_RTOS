@@ -20,6 +20,7 @@ DNSServer my_dnsserver;
 String target_wifi_ssid     = "";
 String target_wifi_passwd   = "";
 String target_site_authcode = "";               /* 心知天气密钥 */
+String target_site_city     = "";
 
 
 /* 配置WiFi主函数 */
@@ -127,25 +128,19 @@ void WIFI_HTMLSettingsPage( void )
     s += ssid_list;
     s += "</select><br>密码:<input name=\"pass\" length=64 type=\"text\">";
     // s += "<p>首次使用务必填写心知密钥</p>";
-    // s += "<form method=\"get\" action=\"setconfig\">心知密钥:<input name=\"authcode\" length=64 type=\"text\"><br>";
+    s += "<form method=\"get\" action=\"setap\">心知密钥:<input name=\"authcode\" length=64 type=\"text\"><br>";
+    s += "城市缩写:<input name=\"city\" length=32 type=\"text\"><br>";
     s += "<input name=\"保存并提交\"  type=\"submit\" value=\"提交\"></form>";
     s += "<br><a href=\"/settings\"><button>跳转到配置各种参数页面</button></a>";
     s += "</div>";
     my_webserver.send(200, "text/html", MakeHTMLPage("Wi-Fi配置", s)); 
 }
 
-// ! todo ->  restart
+
 /* "/setap" */
 void WIFI_HTMLSetap( void )
 {
-    /* 清空数据再写入 但是不清除心知天气密钥 */
-    for( uint32_t i = 4000; i < 4064; i++ )
-    {
-        /* EEPROM库对象默认大小为4096字节 0~4095 */
-        EEPROM.begin( 4096 );
-        EEPROM.write( i, 0 );
-        EEPROM.commit();
-    }
+
 
     target_wifi_ssid = urlDecode( my_webserver.arg( "ssid" ) );
     Serial.print( "SSID:\t" );          
@@ -156,44 +151,78 @@ void WIFI_HTMLSetap( void )
     target_site_authcode = urlDecode( my_webserver.arg( "authcode" ) );
     Serial.print( "authcode:\t" );      
     Serial.println( target_site_authcode );
+    target_site_city = urlDecode( my_webserver.arg( "city" ) );
+    Serial.print( "city:\t" );      
+    Serial.println( target_site_city );
 
-    
-    /*******************WIFISSID和Password写入Flash中 32+32字节*******************/
-    for( uint8_t i = 0; i < target_wifi_ssid.length(); i++ )
+    if( ( target_wifi_ssid != "" ) && ( target_wifi_passwd != "" ) )
     {
-        EEPROM.begin( 4096 );
-        EEPROM.write( TARGET_SSID_ADDR + i, target_wifi_ssid[ i ] );
-        Serial.printf("char %d is %c\n", i, EEPROM.read( TARGET_SSID_ADDR + i ));
-        EEPROM.commit();
+        /* 清空数据再写入 但是不清除心知天气密钥 */
+        for( uint32_t i = 0; i < ( TARGET_SSID_ADDR + TARGET_STRING_LEN * 2 ); i++ )
+        {
+            /* EEPROM库对象默认大小为4096字节 0~4095 */
+            EEPROM.begin( 4096 );
+            EEPROM.write( i, 0 );
+            EEPROM.commit();
+        }
+        /*******************WIFISSID和Password写入Flash中 32+32字节*******************/
+        for( uint8_t i = 0; i < target_wifi_ssid.length(); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( TARGET_SSID_ADDR + i, target_wifi_ssid[ i ] );
+            Serial.printf("char %d is %c\n", i, EEPROM.read( TARGET_SSID_ADDR + i ));
+            EEPROM.commit();
+        }
+
+        for( uint8_t i = 0; i < target_wifi_passwd.length(); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( TARGET_PASSWD_ADDR + i, target_wifi_passwd[ i ] );
+            EEPROM.commit();
+        }
     }
 
-    for( uint8_t i = 0; i < target_wifi_passwd.length(); i++ )
-    {
-        EEPROM.begin( 4096 );
-        EEPROM.write( TARGET_PASSWD_ADDR + i, target_wifi_passwd[ i ] );
-        EEPROM.commit();
-    }
-    
     /*******************心知天气密钥写入Flash 64字节*******************/
-    // if( target_site_authcode != "" )
-    // {
-    //     /* 先清除后写入 */
-    //     for( uint32_t i = TARGET_AUTH_ADDR; i < 4096; i++ )
-    //     {
-    //         EEPROM.begin( 4096 );
-    //         EEPROM.write( i, 0 );
-    //         EEPROM.commit();
-    //     }
+    if( target_site_authcode != "" )
+    {
+        /* 先清除后写入 心智天气密钥长度小于32字节 */
+        for( uint32_t i = TARGET_AUTH_ADDR; i < ( TARGET_AUTH_ADDR + TARGET_STRING_LEN ); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( i, 0 );
+            EEPROM.commit();
+        }
 
-    //     for( uint32_t i = TARGET_AUTH_ADDR; i < target_site_authcode.length(); i++ )
-    //     {
-    //         EEPROM.begin( 4096 );
-    //         EEPROM.write( TARGET_AUTH_ADDR + i, target_site_authcode[ i ] );
-    //         EEPROM.commit();
-    //     }
+        for( uint32_t i = TARGET_AUTH_ADDR; i < target_site_authcode.length(); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( TARGET_AUTH_ADDR + i, target_site_authcode[ i ] );
+            EEPROM.commit();
+        }
 
-    //     Serial.println( "Write AUTH to flash done" );
-    // }
+        Serial.println( "Write AUTH to flash done" );
+    }
+
+    /* 城市名称缩写 */
+    if( target_site_city != "" )
+    {
+        /* 先清除后写入 心智天气密钥长度小于32字节 */
+        for( uint32_t i = TARGET_CITY_ADDR; i < ( TARGET_CITY_ADDR + TARGET_STRING_LEN ); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( i, 0 );
+            EEPROM.commit();
+        }
+
+        for( uint32_t i = TARGET_CITY_ADDR; i < target_site_city.length(); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( TARGET_CITY_ADDR + i, target_site_city[ i ] );
+            EEPROM.commit();
+        }
+
+        Serial.println( "Write city to flash done" );
+    }
 
     // EEPROM.commit();
     EEPROM.end();

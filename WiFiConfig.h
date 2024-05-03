@@ -4,6 +4,8 @@
 #define TARGET_SSID_ADDR    0
 #define TARGET_PASSWD_ADDR  32
 #define TARGET_AUTH_ADDR    64
+#define TARGET_CITY_ADDR    96
+#define TARGET_STRING_LEN   32
 
 /* Function */
 /**************************************************************************************/
