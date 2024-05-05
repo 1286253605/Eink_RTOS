@@ -26,5 +26,6 @@ void WebseverLoop( void );
 
 extern String target_wifi_ssid;
 extern String target_wifi_passwd;
+extern String target_site_authcode;
 
 #endif

@@ -344,15 +344,15 @@ bool CheckWiFiConfigInFlash( void )
     }
     Serial.printf( "WiFi Passwd : %s\n", target_wifi_passwd.c_str() );
 
-    // for( uint8_t i = TARGET_AUTH_ADDR; i < TARGET_AUTH_ADDR + 64; i++  )
-    // {
-    //     char ch = EEPROM.read( i );
-    //     if( ch != 0 )
-    //     {
-    //         target_site_authcode += char( EEPROM.read( i ) );
-    //     }
-    // }
-    // Serial.printf( "Auth code : %s\n", target_site_authcode );
+    for( uint8_t i = TARGET_AUTH_ADDR; i < TARGET_AUTH_ADDR + 64; i++  )
+    {
+        char ch = EEPROM.read( i );
+        if( ( ch != 0 ) && ( ch != 255 )  )
+        {
+            target_site_authcode += char( EEPROM.read( i ) );
+        }
+    }
+    Serial.printf( "Auth code : %s\n", target_site_authcode );
 
     return true;
 }
