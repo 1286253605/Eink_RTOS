@@ -227,16 +227,17 @@ String callHttps(String url)
     {
 
         int httpsCode = https.GET();
-        if (httpsCode > 0) //判断有无返回值
+        if (httpsCode > 0) // 判断有无返回值
         {
             /*payload = https.getString();
             Serial.println(payload);
             return payload;*/
-            if (httpsCode == 200 || httpsCode == 304 || httpsCode == 403 || httpsCode == 404 || httpsCode == 500) //判断请求是正确
+            if (httpsCode == 200 || httpsCode == 304 || httpsCode == 403 || httpsCode == 404 || httpsCode == 500) // 判断请求是正确
             {
                 payload = https.getString();
                 //        Serial.println(payload);
                 Serial.println(" ");
+                // Serial.println( payload.c_str() );
                 return payload;
             }
             else
@@ -269,8 +270,6 @@ String callHttps(String url)
     }
     https.end();
 }
-
-
 
 void UpdataWeatherData()
 {
@@ -307,4 +306,40 @@ void UpdataWeatherData()
     ParseLifeIndex( str_temp, &life_index );
 
     return;
+}
+
+void SetDefaultWeatherValue()
+{
+    strcpy( actual_weather.city, "青岛" );
+
+    // actual_weather.weather_code = "1";
+    // actual_weather.weather_name = "晴";
+    // actual_weather.temp = "15";
+    // actual_weather.last_update = "2024-04-27T23:27:36+08:00";
+
+    // life_index.dressing = "炎热";
+    // life_index.flu = "少发";
+    // life_index.sport = "适宜";
+    // life_index.travel = "适宜";
+    // life_index.uvi = "强";
+
+    // future_weather.date0 = "2024-05-06";
+    // future_weather.date0_text_day = "晴";
+    // future_weather.date0_text_night = "晴";
+
+    strcpy(actual_weather.weather_code, "1");
+    strcpy(actual_weather.weather_name, "晴");
+    strcpy(actual_weather.temp, "120");
+    strcpy(actual_weather.last_update, "2024-04-27T23:27:36+08:00");
+
+    strcpy(life_index.dressing, "炎热");
+    strcpy(life_index.flu, "少发");
+    strcpy(life_index.sport, "适宜");
+    strcpy(life_index.travel, "适宜");
+    strcpy(life_index.uvi, "强");
+
+    strcpy(future_weather.date0, "2024-05-06");
+    strcpy(future_weather.date0_text_day, "晴");
+    strcpy(future_weather.date0_text_night, "晴");
+
 }

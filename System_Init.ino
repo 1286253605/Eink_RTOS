@@ -46,11 +46,12 @@ void SystemSoftwareInit( void )
     xTaskCreate( Task_DrawTestText,         "DTT",      (1024)*8,   NULL,   IDLE_PRIORITY+1,    &THt_DrawTT         );
     xTaskCreate( Task_Select,               "SEL",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawSelect     );
     xTaskCreate( Task_Webserver,            "WEB",      (1024)*8,   NULL,   IDLE_PRIORITY+1,    &THt_TaskWebserver  );
-
+    xTaskCreate( Task_DrawWeather,          "WEA",      (1024)*10,  NULL,   IDLE_PRIORITY+1,    &THt_TaskWeather    );
     /* 只启动必要任务和主页面任务 其他任务直接挂起等待页面切换 */
     vTaskSuspend( THt_DrawTT        );
     vTaskSuspend( THt_DrawSelect    );
     vTaskSuspend( THt_TaskWebserver );
+    vTaskSuspend( THt_TaskWeather   );
     // vTaskSuspend( THt_DrawGIF       );
     return;
 }

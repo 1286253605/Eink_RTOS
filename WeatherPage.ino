@@ -1,6 +1,7 @@
 #include<Arduino.h>
 #include "System_Init.h"
 #include "WeatherPage.h"
+#include "WeatherGet.h"
 #include "WeatherResources.h"
 
 
@@ -114,11 +115,42 @@ void DrawWeatherStateLogo( String tianqi )
     }
 }
 
+void InitWeatherPage()
+{
+    my_display.setFullWindow();
+    my_display.fillScreen( GxEPD_WHITE );
+    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
+    my_display.nextPage();
+    return;
+}
+
 void DrawWeatherPageAll( void )
 {
+    InitWeatherPage();
+
+    String str_temp = "";
+    str_temp += actual_weather.weather_name;
+    DrawWeatherStateLogo( str_temp );
+    my_display.drawInvertedBitmap( POS_CITY_LOGO_X, POS_CITY_LOGO_Y, dingwei, 32, 28, GxEPD_BLACK );
+    str_temp = "";
     
+    my_u8g2_fonts.setCursor( POS_CITY_TXT_X, POS_CITY_TXT_Y );
+    str_temp = "城市:"; str_temp += actual_weather.city;
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
 
+    my_u8g2_fonts.setCursor( POS_TEMP_NOW_TXT_X, POS_TEMP_NOW_TXT_Y );
+    str_temp = "当前温度:"; str_temp += actual_weather.temp;
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+    
+    my_u8g2_fonts.setCursor( POS_UPDATE_TXT_X, POS_UPDATE_TXT_Y );
+    str_temp = "日期:"; 
+    for( uint8_t i=0; i < 10; i++ )  str_temp += actual_weather.last_update[i];
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
 
+    my_display.nextPage();
     return;
 }
 

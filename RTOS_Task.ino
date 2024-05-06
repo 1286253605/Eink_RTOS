@@ -10,6 +10,7 @@
 #include "WiFi.h"
 #include "pic.h"
 #include "my_ntp.h"
+#include "WeatherGet.h"
 
 /* 屏幕排线折叠 朝向屏幕右上方是MODE 右下方是KEEP */
 #define KEY_NEXT_PAGE               ENUM_KEY_BOOT
@@ -17,6 +18,7 @@
 #define KEY_CONFIRM                 ENUM_KEY_KEEP
 #define KEY_FUNCTION_NEXT_PAGE      ENUM_KEY_MODE
 #define KEY_FUNCTION_CONFIRM        ENUM_KEY_KEEP
+#define KEY_FUNCTION_UPDATE         ENUM_KEY_BOOT
 
 
 /**********************************************
@@ -25,6 +27,7 @@
 /* Semaphore */
 SemaphoreHandle_t sema_binary_keys = NULL;
 SemaphoreHandle_t muxtex_handler_keys_now = NULL;
+
 
 /* Timer */
 // TimerHandle_t timer_drawTT  = NULL;
@@ -113,6 +116,7 @@ void Task_DrawGif( void* args )
                 // vTaskResume()                            /* 进入功能界面 */
                 ntp_init();
                 vTaskResume( THt_DrawTT );
+                // vTaskResume( THt_TaskWeather );
                 vTaskSuspend( NULL );
             }
             else                                            /* 没连上 */
@@ -183,10 +187,9 @@ void Task_DrawTestText( void* args )
         }
         if( temp_key == KEY_FUNCTION_NEXT_PAGE )
         {
-            // vTaskResume()
-            // vTaskSuspend( NULL );
-            vTaskDelay( pdMS_TO_TICKS( 20 ) );
             _first_loop_flag = pdTRUE;
+            vTaskResume(THt_TaskWeather);
+            vTaskSuspend( NULL );
         }
     }
 }
@@ -195,23 +198,41 @@ void Task_DrawTestText( void* args )
 void Task_DrawWeather( void* args )
 {
     static uint8_t first_loop_flag = pdTRUE;
+    static uint32_t last_auto_update_time = 0;
+    uint8_t manual_update_flag = pdFALSE;
+    uint8_t need_update_UI = pdFALSE;
+    SetDefaultWeatherValue();
+
     for(;;)
     {
         if(  pdTRUE == first_loop_flag )
         {
 			first_loop_flag = pdFALSE;
+            DrawWeatherPageAll();
+        }
 
+    if( ( xTaskGetTickCount() - last_auto_update_time > AUTO_UPDATE_WEATHER_GAP )
+        || manual_update_flag == pdTRUE )
+        {
+            last_auto_update_time = xTaskGetTickCount();
+            manual_update_flag = pdFALSE;
+            UpdataWeatherData();
+            DrawWeatherPageAll();
         }
 
         uint8_t temp_key = TaskFunc_GetKey();
         if( temp_key == KEY_FUNCTION_NEXT_PAGE )
         {
-            // vTaskResume()
-            vTaskSuspend( NULL );
-            vTaskDelay( pdMS_TO_TICKS( 20 ) );
             first_loop_flag = pdTRUE;
+            vTaskResume( THt_DrawTT );
+            vTaskSuspend( NULL );
         }
-        
+        else if( temp_key == KEY_FUNCTION_UPDATE )
+        {
+            manual_update_flag = pdTRUE;
+        }
+
+        vTaskDelay( pdMS_TO_TICKS(20) );
     }
 }
 

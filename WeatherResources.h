@@ -1,9 +1,7 @@
 #ifndef _WEATHERRES_H_
 #define _WEATHERRES_H_
 /* 有的组件位置是动态的 根据之前的组件文本长度变化而变化 比如温度后的C */
-/* 天气图标位置 */
-#define POS_X_WEATHER_LOGO          136
-#define POS_Y_WEATHER_LOGO          0
+
 /* 当前城市 LOGO位置 */
 #define POS_X_DESTINATION_LOGO      4
 #define POS_Y_DESTINATION_LOGO      55
@@ -55,5 +53,5 @@ extern const unsigned char shidu[];
 extern const unsigned char fengli[];
 
 //width:32  height:28
-extern const unsigned char dinwei[];
+extern const unsigned char dingwei[];
 #endif

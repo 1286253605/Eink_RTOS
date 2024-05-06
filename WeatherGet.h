@@ -1,7 +1,9 @@
 #ifndef _WEATHER_GET_H_
 #define _WEATHER_GET_H_
 
-typedef struct ActualWeather // 实况天气
+void UpdataWeatherData();
+void SetDefaultWeatherValue();
+struct ActualWeather // 实况天气
 {
     char status_code[64];           // 错误代码
     char city[16];         // 城市名称
@@ -11,7 +13,7 @@ typedef struct ActualWeather // 实况天气
     char last_update[25];           // 最后更新时间
 } ;
 
-typedef struct FutureWeather  // 未来天气
+struct FutureWeather  // 未来天气
 {
     char status_code[64]; // 错误代码
 
@@ -44,7 +46,7 @@ typedef struct FutureWeather  // 未来天气
     // char date2_humidity[5];     //相对湿度
 } ;
 
-typedef struct LifeIndex // 生活指数
+struct LifeIndex // 生活指数
 {
     char status_code[64]; // 错误代码
     char car_washing[13]; // 洗车
@@ -55,5 +57,8 @@ typedef struct LifeIndex // 生活指数
     char uvi[13];         // 紫外线指数
 } ;
 
+// extern struct ActualWeather actual_weather;
+// extern struct FutureWeather future_weather;
+// extern struct LifeIndex life_index;
 
 #endif
