@@ -140,13 +140,71 @@ void DrawWeatherPageAll( void )
     str_temp = "";
 
     my_u8g2_fonts.setCursor( POS_TEMP_NOW_TXT_X, POS_TEMP_NOW_TXT_Y );
-    str_temp = "当前温度:"; str_temp += actual_weather.temp;
+    str_temp = "当前温度:"; 
+    str_temp += actual_weather.temp;
+    str_temp += "°C";
     my_u8g2_fonts.print( str_temp.c_str() );
     str_temp = "";
     
     my_u8g2_fonts.setCursor( POS_UPDATE_TXT_X, POS_UPDATE_TXT_Y );
     str_temp = "日期:"; 
     for( uint8_t i=0; i < 10; i++ )  str_temp += actual_weather.last_update[i];
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+
+    my_u8g2_fonts.setCursor( POS_MAXMIN_TEMP_TXT_X, POS_MAXMIN_TEMP_TXT_Y );
+    str_temp = "TODAY TEMP : "; 
+    str_temp += future_weather.date0_low;
+    str_temp += "~";str_temp += future_weather.date0_high;
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+
+    // my_u8g2_fonts.setCursor( POS_DAYNIGHT_TXT_X, POS_DAYNIGHT_TXT_Y );
+    // str_temp = "TODAY:"; 
+    // str_temp += future_weather.date0_code_day;
+    // str_temp += "~";str_temp += future_weather.date0_code_night;
+    // my_u8g2_fonts.print( str_temp.c_str() );
+    // str_temp = "";
+
+    my_u8g2_fonts.setCursor( POS_CLOTHING_TXT_X, POS_CLOTHING_TXT_Y);
+    str_temp = "穿衣:"; 
+    str_temp += life_index.dressing;
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+
+    my_u8g2_fonts.setCursor( POS_SPORT_TEXT_X, POS_SPORT_TEXT_Y);
+    str_temp = "运动:"; 
+    str_temp += life_index.sport;
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+
+    my_u8g2_fonts.setCursor( POS_FLU_TEXT_X, POS_FLU_TEXT_Y);
+    str_temp = "流感:"; 
+    str_temp += life_index.flu;
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+
+    my_u8g2_fonts.setCursor( POS_MANBA_OUT_TEXT_X, POS_MANBA_OUT_TEXT_Y );
+    str_temp = "出游:"; 
+    str_temp += life_index.travel;
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+
+    my_u8g2_fonts.setCursor( POS_DAY111_TEXT_X, POS_DAY111_TEXT_Y );
+    str_temp = "明天 : "; 
+    str_temp += future_weather.date1_low;
+    str_temp += "~"; 
+    str_temp += future_weather.date1_high ;
+    str_temp += "°C";
+    my_u8g2_fonts.print( str_temp.c_str() );
+    str_temp = "";
+
+    my_u8g2_fonts.setCursor( POS_DAY222_TEXT_X, POS_DAY222_TEXT_Y );
+    str_temp = "后天 : "; 
+    str_temp += future_weather.date2_low;
+    str_temp += "~"; 
+    str_temp += future_weather.date2_high;
+    str_temp += "°C";
     my_u8g2_fonts.print( str_temp.c_str() );
     str_temp = "";
 

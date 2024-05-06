@@ -15,7 +15,7 @@ void Task_Select( void* args );
 void Task_DrawWeather( void* args );
 uint8_t TaskFunc_GetKey( void );
 
-#define AUTO_UPDATE_WEATHER_GAP ( pdMS_TO_TICKS(60*60*1000) )
+#define AUTO_UPDATE_WEATHER_GAP ( pdMS_TO_TICKS(5*60*1000) )
 
 void ChangeTask( TaskHandle_t task_resume, uint8_t* first_flag );
 enum KEY_NOW 
