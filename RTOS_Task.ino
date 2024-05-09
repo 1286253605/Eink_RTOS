@@ -22,7 +22,7 @@
 #define KEY_FUNCTION_UPDATE         ENUM_KEY_BOOT
 
 #define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
-#define TIME_TO_SLEEP  10         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
+#define TIME_TO_SLEEP  15         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
 #define digitalToggle(x) digitalWrite(x, !digitalRead(x))
 #define BOTTON_PIN_BITMASK  ((1ul<<1) | (1ul<<8))        // GPIOs 1 and 8
 
@@ -186,7 +186,7 @@ void Task_DrawWeather( void* args )
     /* PIN_KEEP == GPIO_NUM_1 */
     /* PIN_MODE == GPIO_NUM_8 */
     gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );           /* 触发唤醒的GPIO */
-    gpio_wakeup_enable( GPIO_NUM_8, GPIO_INTR_LOW_LEVEL );
+    
     esp_sleep_enable_gpio_wakeup();
     esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP * uS_TO_S_FACTOR );  /* 规定时间触发一次唤醒 */
     
@@ -195,23 +195,28 @@ void Task_DrawWeather( void* args )
         if(  pdTRUE == first_loop_flag )
         {
 			first_loop_flag = pdFALSE;
-            if( WiFi.status() != WL_CONNECTED )
-            {
-                WiFi.begin( target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
-                while( WiFi.status() != WL_CONNECTED );
-            }
+            // if( WiFi.status() != WL_CONNECTED )
+            // {
+            //     WiFi.begin( target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
+            //     while( WiFi.status() != WL_CONNECTED );
+            // }
             UpdataWeatherData();        /* 更新之后才会刷新 所以会稍有延迟 */
             DrawWeatherPageAll();
+            gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );           /* 触发唤醒的GPIO */
+            // gpio_wakeup_enable( GPIO_NUM_8, GPIO_INTR_LOW_LEVEL );
+            esp_sleep_enable_gpio_wakeup();
+            esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP * uS_TO_S_FACTOR );  /* 规定时间触发一次唤醒 */
         }
 
     // if( ( xTaskGetTickCount() - last_auto_update_time > AUTO_UPDATE_WEATHER_GAP )
     //     || manual_update_flag == pdTRUE )
-    //     {
-    //         last_auto_update_time = xTaskGetTickCount();
-    //         manual_update_flag = pdFALSE;
-    //         UpdataWeatherData();
-    //         DrawWeatherPageAll();
-    //     }
+        if( manual_update_flag == pdTRUE )
+        {
+            last_auto_update_time = xTaskGetTickCount();
+            manual_update_flag = pdFALSE;
+            UpdataWeatherData();
+            DrawWeatherPageAll();
+        }
 
         esp_light_sleep_start();
         esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
@@ -227,39 +232,53 @@ void Task_DrawWeather( void* args )
                     gpio_touched = i;
                 }
             }
+            // vTaskResume( THt_DrawTT );
+            // first_loop_flag = pdTRUE;
+            // gpio_wakeup_disable( GPIO_NUM_1 );
+            
+            // vTaskSuspend( NULL );
             switch ( gpio_touched )
             {
-            case 1:
-                vTaskResume( THt_DrawTT );
-                vTaskSuspend( NULL );
-                break;
+            // case 1:
+            //     vTaskResume( THt_DrawTT );
+            //     vTaskSuspend( NULL );
+            //     break;
             
             default:
-                
-                vTaskResume( THt_DrawTT );
                 first_loop_flag = pdTRUE;
+                gpio_wakeup_disable( GPIO_NUM_1 );
+                // gpio_wakeup_disable( GPIO_NUM_8 );
+                vTaskResume( THt_DrawTT );
                 vTaskSuspend( NULL );
                 break;
             }
         } else if( wake_cause == ESP_SLEEP_WAKEUP_TIMER )
         {
-            vTaskDelay( pdMS_TO_TICKS( 5*1000 ) );
-            Serial.println( "wake up by TIMER" );
+                /* 用于验证Timer触发唤醒功能 */
+                first_loop_flag = pdTRUE;
+                gpio_wakeup_disable( GPIO_NUM_1 );
+                // gpio_wakeup_disable( GPIO_NUM_8 );
+                vTaskResume( THt_DrawTT );
+                vTaskSuspend( NULL );
+                /* 用于验证Timer触发唤醒功能 */
+                
+            // UpdataWeatherData();
+            // DrawWeatherPageAll();
         }
 
         
 
-        // uint8_t temp_key = TaskFunc_GetKey();
+        uint8_t temp_key = TaskFunc_GetKey();
         // if( temp_key == KEY_FUNCTION_NEXT_PAGE )
         // {
         //     first_loop_flag = pdTRUE;
         //     vTaskResume( THt_DrawTT );
         //     vTaskSuspend( NULL );
         // }
-        // else if( temp_key == KEY_FUNCTION_UPDATE )
-        // {
-        //     manual_update_flag = pdTRUE;
-        // }
+        if( temp_key == KEY_FUNCTION_UPDATE )
+        {
+            manual_update_flag = pdTRUE;
+        }
 
         vTaskDelay( pdMS_TO_TICKS(20) );
     }

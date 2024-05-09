@@ -3,6 +3,11 @@
 
 void UpdataWeatherData();
 void SetDefaultWeatherValue();
+
+extern struct ActualWeather actual_weather;
+extern struct FutureWeather future_weather;
+extern struct LifeIndex life_index;
+
 struct ActualWeather // 实况天气
 {
     char status_code[64];           // 错误代码
