@@ -178,6 +178,7 @@ void Task_DrawTestText( void* args )
 void Task_DrawWeather( void* args )
 {
     static uint8_t first_loop_flag = pdTRUE;
+    static uint32_t target_tick = 0;
     static uint32_t last_auto_update_time = 0;
     uint8_t manual_update_flag = pdFALSE;
     uint8_t need_update_UI = pdFALSE;
@@ -194,52 +195,53 @@ void Task_DrawWeather( void* args )
     {
         if(  pdTRUE == first_loop_flag )
         {
+            target_tick = 0;
 			first_loop_flag = pdFALSE;
             UpdataWeatherData();        /* 更新之后才会刷新 所以会稍有延迟 */
             DrawWeatherPageAll();
+            vTaskDelay( pdMS_TO_TICKS( 1000 ) );
             gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );           /* 触发唤醒的GPIO */
             esp_sleep_enable_gpio_wakeup();
             esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP * uS_TO_S_FACTOR );  /* 规定时间触发一次唤醒 */
+            esp_light_sleep_start();        /* 初始化之后就第一次进入Light Sleep */
         }
 
-        esp_light_sleep_start();
         esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
         if( wake_cause == ESP_SLEEP_WAKEUP_GPIO )
         {
-            first_loop_flag = pdTRUE;
-            gpio_wakeup_disable( GPIO_NUM_1 );
-            // gpio_wakeup_disable( GPIO_NUM_8 );
-            vTaskResume( THt_DrawTT );
-            vTaskSuspend( NULL );
-
+            target_tick = xTaskGetTickCount() + pdMS_TO_TICKS( 5*1000 );    /* 5s进行按键检测 进行接下来的操作 */
+            while( xTaskGetTickCount() <= target_tick )
+            {
+                uint8_t temp_key = TaskFunc_GetKey();
+                if( temp_key == KEY_FUNCTION_CONFIRM )
+                {
+                    UpdataWeatherData();
+                    DrawWeatherPageAll();
+                }
+                if( temp_key == KEY_FUNCTION_NEXT_PAGE )
+                {
+                    first_loop_flag = pdTRUE;
+                    vTaskResume(THt_DrawTT);
+                    vTaskSuspend( NULL );
+                    break; /* 任务恢复后从此处开始运行 所以需要手动再按一下更新键 */
+                }
+                vTaskDelay( pdMS_TO_TICKS( 20 ) );
+            }
+            target_tick = 0;
+            esp_light_sleep_start();
         } else if( wake_cause == ESP_SLEEP_WAKEUP_TIMER )
         {
-                /* 用于验证Timer触发唤醒功能 */
+                // /* 用于验证Timer触发唤醒功能 */
                 // first_loop_flag = pdTRUE;
                 // gpio_wakeup_disable( GPIO_NUM_1 );
                 // // gpio_wakeup_disable( GPIO_NUM_8 );
                 // vTaskResume( THt_DrawTT );
                 // vTaskSuspend( NULL );
-                /* 用于验证Timer触发唤醒功能 */
+                // /* 用于验证Timer触发唤醒功能 */
             UpdataWeatherData();
             DrawWeatherPageAll();
+            esp_light_sleep_start();
         }
-
-        
-
-        uint8_t temp_key = TaskFunc_GetKey();
-        // if( temp_key == KEY_FUNCTION_NEXT_PAGE )
-        // {
-        //     first_loop_flag = pdTRUE;
-        //     vTaskResume( THt_DrawTT );
-        //     vTaskSuspend( NULL );
-        // }
-        if( temp_key == KEY_FUNCTION_UPDATE )
-        {
-            manual_update_flag = pdTRUE;
-        }
-
-        vTaskDelay( pdMS_TO_TICKS(20) );
     }
 }
 
