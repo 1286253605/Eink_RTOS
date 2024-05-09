@@ -142,7 +142,7 @@ void DrawWeatherPageAll( void )
     my_u8g2_fonts.setCursor( POS_TEMP_NOW_TXT_X, POS_TEMP_NOW_TXT_Y );
     str_temp = "当前温度:"; 
     str_temp += actual_weather.temp;
-    str_temp += "°C";
+    str_temp += "度";
     my_u8g2_fonts.print( str_temp.c_str() );
     str_temp = "";
     
@@ -195,7 +195,8 @@ void DrawWeatherPageAll( void )
     str_temp += future_weather.date1_low;
     str_temp += "~"; 
     str_temp += future_weather.date1_high ;
-    str_temp += "°C";
+    str_temp += "度  ";
+    str_temp += future_weather.date1_text_day;
     my_u8g2_fonts.print( str_temp.c_str() );
     str_temp = "";
 
@@ -204,7 +205,8 @@ void DrawWeatherPageAll( void )
     str_temp += future_weather.date2_low;
     str_temp += "~"; 
     str_temp += future_weather.date2_high;
-    str_temp += "°C";
+    str_temp += "度  ";
+    str_temp += future_weather.date2_text_day;
     my_u8g2_fonts.print( str_temp.c_str() );
     str_temp = "";
 

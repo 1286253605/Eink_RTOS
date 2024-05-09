@@ -11,6 +11,7 @@
 #include "pic.h"
 #include "my_ntp.h"
 #include "WeatherGet.h"
+#include "esp_sleep.h"
 
 /* 屏幕排线折叠 朝向屏幕右上方是MODE 右下方是KEEP */
 #define KEY_NEXT_PAGE               ENUM_KEY_BOOT
@@ -202,12 +203,17 @@ void Task_DrawWeather( void* args )
     uint8_t manual_update_flag = pdFALSE;
     uint8_t need_update_UI = pdFALSE;
     SetDefaultWeatherValue();
-
+    /* 配置为GPIO拉低时唤醒 */
+    /* PIN_KEEP == GPIO_NUM_1 */
+    gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );
+    esp_sleep_enable_gpio_wakeup();
+    
     for(;;)
     {
         if(  pdTRUE == first_loop_flag )
         {
 			first_loop_flag = pdFALSE;
+            UpdataWeatherData();        /* 更新之后才会刷新 所以会稍有延迟 */
             DrawWeatherPageAll();
         }
 
@@ -219,6 +225,13 @@ void Task_DrawWeather( void* args )
             UpdataWeatherData();
             DrawWeatherPageAll();
         }
+
+        // esp_light_sleep_start();
+        if( esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO )
+        {
+            Serial.println( "wake up" );
+        }
+        
 
         uint8_t temp_key = TaskFunc_GetKey();
         if( temp_key == KEY_FUNCTION_NEXT_PAGE )
