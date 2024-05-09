@@ -185,39 +185,41 @@ void Task_DrawWeather( void* args )
     /* 配置为GPIO拉低时唤醒 */
     /* PIN_KEEP == GPIO_NUM_1 */
     /* PIN_MODE == GPIO_NUM_8 */
-    // gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );
-    // esp_sleep_enable_touchpad_wakeup();
-    gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );
+    gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );           /* 触发唤醒的GPIO */
+    gpio_wakeup_enable( GPIO_NUM_8, GPIO_INTR_LOW_LEVEL );
     esp_sleep_enable_gpio_wakeup();
-    esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP * uS_TO_S_FACTOR );  /* 10s触发一次唤醒 */
+    esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP * uS_TO_S_FACTOR );  /* 规定时间触发一次唤醒 */
     
     for(;;)
     {
         if(  pdTRUE == first_loop_flag )
         {
 			first_loop_flag = pdFALSE;
+            if( WiFi.status() != WL_CONNECTED )
+            {
+                WiFi.begin( target_wifi_ssid.c_str(), target_wifi_passwd.c_str() );
+                while( WiFi.status() != WL_CONNECTED );
+            }
             UpdataWeatherData();        /* 更新之后才会刷新 所以会稍有延迟 */
             DrawWeatherPageAll();
         }
 
-    if( ( xTaskGetTickCount() - last_auto_update_time > AUTO_UPDATE_WEATHER_GAP )
-        || manual_update_flag == pdTRUE )
-        {
-            last_auto_update_time = xTaskGetTickCount();
-            manual_update_flag = pdFALSE;
-            UpdataWeatherData();
-            DrawWeatherPageAll();
-        }
+    // if( ( xTaskGetTickCount() - last_auto_update_time > AUTO_UPDATE_WEATHER_GAP )
+    //     || manual_update_flag == pdTRUE )
+    //     {
+    //         last_auto_update_time = xTaskGetTickCount();
+    //         manual_update_flag = pdFALSE;
+    //         UpdataWeatherData();
+    //         DrawWeatherPageAll();
+    //     }
 
         esp_light_sleep_start();
         esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
         if( wake_cause == ESP_SLEEP_WAKEUP_GPIO )
         {
-            // vTaskDelay( pdMS_TO_TICKS( 5*1000 ) );
-            // Serial.println( "wake up by GPIO" );
-            // touch_pad_t touch_pin = esp_sleep_get_touchpad_wakeup_status();
             uint8_t gpio_touched = 0;
             uint64_t bit_map = esp_sleep_get_gpio_wakeup_status();
+            /* 不是很有效 干脆所有按钮都起换页作用 */
             for( uint8_t i = 0; i < 64; i++ )
             {
                 if( bit_map & ( 1UL << i ) )
@@ -233,7 +235,9 @@ void Task_DrawWeather( void* args )
                 break;
             
             default:
+                
                 vTaskResume( THt_DrawTT );
+                first_loop_flag = pdTRUE;
                 vTaskSuspend( NULL );
                 break;
             }
@@ -245,17 +249,17 @@ void Task_DrawWeather( void* args )
 
         
 
-        uint8_t temp_key = TaskFunc_GetKey();
-        if( temp_key == KEY_FUNCTION_NEXT_PAGE )
-        {
-            first_loop_flag = pdTRUE;
-            vTaskResume( THt_DrawTT );
-            vTaskSuspend( NULL );
-        }
-        else if( temp_key == KEY_FUNCTION_UPDATE )
-        {
-            manual_update_flag = pdTRUE;
-        }
+        // uint8_t temp_key = TaskFunc_GetKey();
+        // if( temp_key == KEY_FUNCTION_NEXT_PAGE )
+        // {
+        //     first_loop_flag = pdTRUE;
+        //     vTaskResume( THt_DrawTT );
+        //     vTaskSuspend( NULL );
+        // }
+        // else if( temp_key == KEY_FUNCTION_UPDATE )
+        // {
+        //     manual_update_flag = pdTRUE;
+        // }
 
         vTaskDelay( pdMS_TO_TICKS(20) );
     }
