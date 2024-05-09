@@ -21,6 +21,10 @@
 #define KEY_FUNCTION_CONFIRM        ENUM_KEY_KEEP
 #define KEY_FUNCTION_UPDATE         ENUM_KEY_BOOT
 
+#define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
+#define TIME_TO_SLEEP  10         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
+#define digitalToggle(x) digitalWrite(x, !digitalRead(x))
+#define BOTTON_PIN_BITMASK  ((1ul<<1) | (1ul<<8))        // GPIOs 1 and 8
 
 /**********************************************
     Global
@@ -54,31 +58,6 @@ uint8_t TaskFunc_GetKey( void )
 }
 
 
-/**********************************************
-    Calback
-**********************************************/
-
-
-// void _Timer_TaskAll_Callback( TimerHandle_t _timer )
-// {
-//     uint32_t id = ( uint32_t )pvTimerGetTimerID( _timer );
-    
-//     if( id == TIMER_ID_DRAW_TT )
-//     {
-//         _counter_dtt++;
-//         if( _counter_dtt >= 100 )
-//         {
-//             _counter_dtt = 0;
-//         }
-//     }
-
-//     if( id == TIMER_ID_DRAW_GIF )
-//     {
-//         _counter_drawGIF++;
-//         if( _counter_drawGIF >= 254 )
-//         {  _counter_drawGIF = 0; }
-//     }
-// }
 
 /**********************************************
     Task 
@@ -205,8 +184,12 @@ void Task_DrawWeather( void* args )
     SetDefaultWeatherValue();
     /* 配置为GPIO拉低时唤醒 */
     /* PIN_KEEP == GPIO_NUM_1 */
+    /* PIN_MODE == GPIO_NUM_8 */
+    // gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );
+    // esp_sleep_enable_touchpad_wakeup();
     gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );
     esp_sleep_enable_gpio_wakeup();
+    esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP * uS_TO_S_FACTOR );  /* 10s触发一次唤醒 */
     
     for(;;)
     {
@@ -226,11 +209,40 @@ void Task_DrawWeather( void* args )
             DrawWeatherPageAll();
         }
 
-        // esp_light_sleep_start();
-        if( esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO )
+        esp_light_sleep_start();
+        esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
+        if( wake_cause == ESP_SLEEP_WAKEUP_GPIO )
         {
-            Serial.println( "wake up" );
+            // vTaskDelay( pdMS_TO_TICKS( 5*1000 ) );
+            // Serial.println( "wake up by GPIO" );
+            // touch_pad_t touch_pin = esp_sleep_get_touchpad_wakeup_status();
+            uint8_t gpio_touched = 0;
+            uint64_t bit_map = esp_sleep_get_gpio_wakeup_status();
+            for( uint8_t i = 0; i < 64; i++ )
+            {
+                if( bit_map & ( 1UL << i ) )
+                {
+                    gpio_touched = i;
+                }
+            }
+            switch ( gpio_touched )
+            {
+            case 1:
+                vTaskResume( THt_DrawTT );
+                vTaskSuspend( NULL );
+                break;
+            
+            default:
+                vTaskResume( THt_DrawTT );
+                vTaskSuspend( NULL );
+                break;
+            }
+        } else if( wake_cause == ESP_SLEEP_WAKEUP_TIMER )
+        {
+            vTaskDelay( pdMS_TO_TICKS( 5*1000 ) );
+            Serial.println( "wake up by TIMER" );
         }
+
         
 
         uint8_t temp_key = TaskFunc_GetKey();
