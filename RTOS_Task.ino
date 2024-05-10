@@ -143,34 +143,55 @@ void Task_DrawTestText( void* args )
     static uint8_t _first_loop_flag = pdTRUE;
     static uint8_t pic_now      = 0;
     static uint8_t pic_before   = 0;
+    static uint32_t target_tick = 0;
 
     for(;;)
     {
+
         if( _first_loop_flag == pdTRUE )
         {
+            target_tick = 0;
             _first_loop_flag = pdFALSE;
             DrawTestText();
+            vTaskDelay( pdMS_TO_TICKS( 100 ) );
+            gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );           /* 触发唤醒的GPIO */
+            esp_sleep_enable_gpio_wakeup();
+            esp_light_sleep_start();
         }
-        if( pic_before != pic_now ) 
+        esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
+        if( wake_cause == ESP_SLEEP_WAKEUP_GPIO )
         {
-            PicShowInPage( pic_now );
-            pic_before = pic_now;
-        }
+            target_tick = xTaskGetTickCount() + pdMS_TO_TICKS( 3*1000 );
+            while( xTaskGetTickCount() <= target_tick )
+            {
+                if( pic_before != pic_now ) 
+                {
+                    PicShowInPage( pic_now );
+                    pic_before = pic_now;
+                }
 
-        uint8_t temp_key = TaskFunc_GetKey();
-        /* 画下一张图片 */
-        if( temp_key == KEY_FUNCTION_CONFIRM )
-        {
-            pic_now++;
-            if( pic_now >= PIC_MAX_NUM) pic_now = 0;
-            vTaskDelay( pdMS_TO_TICKS( 20 ) );
-        }
-        if( temp_key == KEY_FUNCTION_NEXT_PAGE )
-        {
-            _first_loop_flag = pdTRUE;
-            vTaskResume(THt_TaskWeather);
-            vTaskSuspend( NULL );
-        }
+                uint8_t temp_key = TaskFunc_GetKey();
+                /* 画下一张图片 */
+                if( temp_key == KEY_FUNCTION_CONFIRM )
+                {
+                    pic_now++;
+                    if( pic_now >= PIC_MAX_NUM) pic_now = 0;
+                    vTaskDelay( pdMS_TO_TICKS( 20 ) );
+                }
+                if( temp_key == KEY_FUNCTION_NEXT_PAGE )
+                {
+                    _first_loop_flag = pdTRUE;
+                    vTaskResume(THt_TaskWeather);
+                    vTaskSuspend( NULL );
+                }
+            }
+            target_tick = 0;
+            esp_light_sleep_start();
+
+        } else { esp_light_sleep_start(); }
+
+
+
     }
 }
 
@@ -197,8 +218,10 @@ void Task_DrawWeather( void* args )
         {
             target_tick = 0;
 			first_loop_flag = pdFALSE;
+            DrawWeatherPageAll();
             UpdataWeatherData();        /* 更新之后才会刷新 所以会稍有延迟 */
             DrawWeatherPageAll();
+
             vTaskDelay( pdMS_TO_TICKS( 1000 ) );
             gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );           /* 触发唤醒的GPIO */
             esp_sleep_enable_gpio_wakeup();
@@ -238,6 +261,8 @@ void Task_DrawWeather( void* args )
                 // vTaskResume( THt_DrawTT );
                 // vTaskSuspend( NULL );
                 // /* 用于验证Timer触发唤醒功能 */
+
+                
             UpdataWeatherData();
             DrawWeatherPageAll();
             esp_light_sleep_start();
