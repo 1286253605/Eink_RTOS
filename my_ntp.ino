@@ -1,7 +1,7 @@
 #include<Arduino.h>
 #include "my_ntp.h"
 
-const char *ntpServer = "ntp1.aliyun.com";
+const char *ntpServer = "time1.cloud.tencent.com";
 const long gmtOffset_sec = 8 * 60 * 60;     /* 文章中的 -8*3600是错的 */
 const int daylightOffset_sec = 0;
 

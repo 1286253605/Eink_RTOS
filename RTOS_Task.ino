@@ -21,6 +21,7 @@
 #define KEY_FUNCTION_CONFIRM        ENUM_KEY_KEEP
 #define KEY_FUNCTION_UPDATE         ENUM_KEY_BOOT
 
+
 #define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
 #define TIME_TO_SLEEP  15         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
 #define digitalToggle(x) digitalWrite(x, !digitalRead(x))
@@ -174,8 +175,8 @@ void Task_DrawTestText( void* args )
                 /* 画下一张图片 */
                 if( temp_key == KEY_FUNCTION_CONFIRM )
                 {
-                    pic_now++;
-                    if( pic_now >= PIC_MAX_NUM) pic_now = 0;
+                    // pic_now++;
+                    // if( pic_now >= PIC_MAX_NUM) pic_now = 0;
                     vTaskDelay( pdMS_TO_TICKS( 20 ) );
                 }
                 if( temp_key == KEY_FUNCTION_NEXT_PAGE )
@@ -183,6 +184,12 @@ void Task_DrawTestText( void* args )
                     _first_loop_flag = pdTRUE;
                     vTaskResume(THt_TaskWeather);
                     vTaskSuspend( NULL );
+                }
+                if( temp_key == KEY_FUNCTION_UPDATE )
+                {
+                    pic_now++;
+                    if( pic_now >= PIC_MAX_NUM) pic_now = 0;
+                    vTaskDelay( pdMS_TO_TICKS( 20 ) );
                 }
             }
             target_tick = 0;
@@ -236,7 +243,7 @@ void Task_DrawWeather( void* args )
             while( xTaskGetTickCount() <= target_tick )
             {
                 uint8_t temp_key = TaskFunc_GetKey();
-                if( temp_key == KEY_FUNCTION_CONFIRM )
+                if( temp_key == KEY_FUNCTION_UPDATE )
                 {
                     UpdataWeatherData();
                     DrawWeatherPageAll();
@@ -244,7 +251,8 @@ void Task_DrawWeather( void* args )
                 if( temp_key == KEY_FUNCTION_NEXT_PAGE )
                 {
                     first_loop_flag = pdTRUE;
-                    vTaskResume(THt_DrawTT);
+                    // vTaskResume(THt_DrawTT);
+                    vTaskResume(THt_TaskClock);
                     vTaskSuspend( NULL );
                     break; /* 任务恢复后从此处开始运行 所以需要手动再按一下更新键 */
                 }
@@ -262,9 +270,9 @@ void Task_DrawWeather( void* args )
                 // vTaskSuspend( NULL );
                 // /* 用于验证Timer触发唤醒功能 */
 
-                
             UpdataWeatherData();
             DrawWeatherPageAll();
+            vTaskDelay( pdMS_TO_TICKS(50) );
             esp_light_sleep_start();
         }
     }

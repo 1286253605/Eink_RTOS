@@ -119,8 +119,8 @@ void InitWeatherPage()
 {
     my_display.setFullWindow();
     my_display.fillScreen( GxEPD_WHITE );
-    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
     my_display.nextPage();
+    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
     return;
 }
 

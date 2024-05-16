@@ -16,6 +16,7 @@ extern TaskHandle_t THt_DrawGIF;
 extern TaskHandle_t THt_DrawSelect;
 extern TaskHandle_t THt_TaskWebserver;
 extern TaskHandle_t THt_TaskWeather;
+extern TaskHandle_t THt_TaskClock;
 
 void SystemHardwareInit( void );
 void SystemSoftwareInit( void );

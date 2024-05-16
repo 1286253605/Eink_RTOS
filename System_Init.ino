@@ -6,6 +6,8 @@
 #include "Eink_Arduinov1.h"
 #include "EEPROM.h"
 
+#include "ClockPage.h"
+
 // FreeFonts from Adafruit_GFX
 
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -25,6 +27,7 @@ TaskHandle_t THt_DrawGIF        = NULL;
 TaskHandle_t THt_DrawSelect     = NULL;
 TaskHandle_t THt_TaskWebserver  = NULL;
 TaskHandle_t THt_TaskWeather    = NULL;
+TaskHandle_t THt_TaskClock      = NULL;
 
 
 void SystemHardwareInit( void )
@@ -39,7 +42,9 @@ void SystemSoftwareInit( void )
 {
     sema_binary_keys            = xSemaphoreCreateBinary();
     muxtex_handler_keys_now     = xSemaphoreCreateMutex();
-
+    /* pxStack = ( StackType_t *) pvPortMalloc(((( size_t) usStackDepth ) * sizeof( StackType_t))); 
+    *  usStackDepth*4 才是任务栈大小
+    */
     // xTaskCreate( Task_Print,                "PRINT",    (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL );
     xTaskCreate( Task_KeyDetect,            "MODE",     (1024)*1,   NULL,   IDLE_PRIORITY+1,    NULL                );
     xTaskCreate( Task_DrawGif,              "GIF",      (1024)*4,   NULL,   IDLE_PRIORITY+1,    &THt_DrawGIF        );
@@ -47,11 +52,13 @@ void SystemSoftwareInit( void )
     xTaskCreate( Task_Select,               "SEL",      (1024)*2,   NULL,   IDLE_PRIORITY+1,    &THt_DrawSelect     );
     xTaskCreate( Task_Webserver,            "WEB",      (1024)*8,   NULL,   IDLE_PRIORITY+1,    &THt_TaskWebserver  );
     xTaskCreate( Task_DrawWeather,          "WEA",      (1024)*10,  NULL,   IDLE_PRIORITY+1,    &THt_TaskWeather    );
+    xTaskCreate( Task_DrawClock,            "CLK",      (1024)*8,   NULL,   IDLE_PRIORITY+1,    &THt_TaskClock      );
     /* 只启动必要任务和主页面任务 其他任务直接挂起等待页面切换 */
     vTaskSuspend( THt_DrawTT        );
     vTaskSuspend( THt_DrawSelect    );
     vTaskSuspend( THt_TaskWebserver );
     vTaskSuspend( THt_TaskWeather   );
+    vTaskSuspend( THt_TaskClock     );
     // vTaskSuspend( THt_DrawGIF       );
     return;
 }
