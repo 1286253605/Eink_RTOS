@@ -23,7 +23,7 @@
 
 
 #define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
-#define TIME_TO_SLEEP  15         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
+#define TIME_TO_SLEEP  60         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
 #define digitalToggle(x) digitalWrite(x, !digitalRead(x))
 #define BOTTON_PIN_BITMASK  ((1ul<<1) | (1ul<<8))        // GPIOs 1 and 8
 

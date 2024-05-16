@@ -6,6 +6,16 @@
 #include "time.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "RTOS_Task.h"
+
+#define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
+#define TIME_TO_SLEEP  60         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
+#define KEY_NEXT_PAGE               ENUM_KEY_BOOT
+#define KEY_SELECT_CHANGE           ENUM_KEY_MODE
+#define KEY_CONFIRM                 ENUM_KEY_KEEP
+#define KEY_FUNCTION_NEXT_PAGE      ENUM_KEY_MODE
+#define KEY_FUNCTION_CONFIRM        ENUM_KEY_KEEP
+#define KEY_FUNCTION_UPDATE         ENUM_KEY_BOOT
 
 
 void DrawClockNumSmall( uint8_t x, uint8_t y, uint8_t num )
@@ -93,7 +103,7 @@ void InitClockPage( void )
     my_display.setFullWindow();
     my_display.fillScreen( GxEPD_WHITE );
     my_display.nextPage();
-    my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
+    // my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
     return;
 }
 
@@ -102,6 +112,10 @@ void DrawClockPageAll( void )
 
     uint8_t try_time = 0;
     struct tm local_time;
+    my_display.setFullWindow();
+    my_display.fillScreen( GxEPD_WHITE );
+    my_display.nextPage();
+    // my_display.setPartialWindow( 0, 0, my_display.width(), my_display.height() );
     // while( !getLocalTime( &local_time ) )
     // {
     //     vTaskDelay( pdMS_TO_TICKS( 100 ) );
@@ -116,7 +130,7 @@ void DrawClockPageAll( void )
         DrawClockNumSmall( POS_TIME_NUM_X + 112, POS_TIME_NUM_Y + 14, 0 );
         DrawClockNumSmall( POS_TIME_NUM_X + 152, POS_TIME_NUM_Y + 14, 0 );
         my_display.nextPage();
-        vTaskDelay( pdMS_TO_TICKS( 100 ) );
+        
     }
     else
     {
@@ -131,40 +145,59 @@ void DrawClockPageAll( void )
 
 }
 
-// void Task_DrawClock( void* args )
-// {
-//     static uint8_t  first_loop_flag    = pdTRUE;
-//     static uint32_t target_tick        = 0;
-//     for(;;)
-//     {
-//         if( first_loop_flag == pdTRUE )
-//         {
-//             first_loop_flag == pdFALSE;
-//             InitClockPage();
-//             DrawClockPageAll();
-//         }
-
-//         DrawClockPageAll();
-//         Serial.println("Clock Task is running");
-//         vTaskDelay( pdMS_TO_TICKS( 1000 ) );
-//     }
-// }
 
 void Task_DrawClock( void* args )
 {
     static uint8_t _first_loop_flag = pdTRUE;
     uint32_t _last_counter = 0;                  /* 记录Tick值 */
-    uint32_t flush_counter = 0;
+    uint32_t target_tick = 0;
+
+    gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );
+    esp_sleep_enable_gpio_wakeup();
+    esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP*uS_TO_S_FACTOR );
 
     for(;;)
     {
         if( _first_loop_flag == pdTRUE )
         {
             _first_loop_flag = pdFALSE;
-            InitClockPage();
             DrawClockPageAll();
+            esp_light_sleep_start();
         }
-        DrawClockPageAll();
-        vTaskDelay( pdMS_TO_TICKS( 2000 ) );
+
+        esp_sleep_wakeup_cause_t wake_cause = esp_sleep_get_wakeup_cause();
+        if( wake_cause == ESP_SLEEP_WAKEUP_GPIO )
+        {
+            target_tick = xTaskGetTickCount() + pdMS_TO_TICKS( 5*1000 );    /* 5s进行按键检测 进行接下来的操作 */
+            while( xTaskGetTickCount() <= target_tick )
+            {
+                uint8_t temp_key = TaskFunc_GetKey();
+                if( temp_key == KEY_FUNCTION_UPDATE )
+                {
+                    DrawClockPageAll();
+                }
+                if( temp_key == KEY_FUNCTION_NEXT_PAGE )
+                {
+                    _first_loop_flag = pdTRUE;
+                    vTaskResume( THt_DrawTT );
+                    vTaskSuspend( NULL );
+                    break; /* 任务恢复后从此处开始运行 所以需要手动再按一下更新键 */
+                }
+                vTaskDelay( pdMS_TO_TICKS( 20 ) );
+            }
+            target_tick = 0;
+            esp_light_sleep_start();
+        } else if( wake_cause == ESP_SLEEP_WAKEUP_TIMER )
+        {
+            // /* Test */
+            // _first_loop_flag = pdTRUE;
+            // vTaskResume( THt_DrawTT );
+            // vTaskSuspend( NULL );
+            /* !!!! 重新唤醒之后没法局刷 and 不知道为什么 TODO */
+            DrawClockPageAll(); 
+            esp_light_sleep_start();
+        }
+        
+
     }
 }
