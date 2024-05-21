@@ -276,7 +276,14 @@ void UpdataWeatherData()
     //拼装实况未来API地址
     String url_FutureWeather = "https://api.seniverse.com/v3/weather/daily.json";
     url_FutureWeather += "?key=" + target_site_authcode;
-    url_FutureWeather += "&location=ip";
+    if( target_site_city != "" )
+    {
+        url_FutureWeather += "&location=";
+        url_FutureWeather += target_site_city;
+    } else {
+        url_FutureWeather += "&location=ip";
+    }
+
     url_FutureWeather += "&language=zh-Hans";
     url_FutureWeather += "&unit=c";
     url_FutureWeather += "&start=0";
@@ -285,14 +292,27 @@ void UpdataWeatherData()
     //拼装实况天气API地址
     String url_ActualWeather = "https://api.seniverse.com/v3/weather/now.json";
     url_ActualWeather += "?key=" + target_site_authcode;
-    url_ActualWeather += "&location=ip";
+    if( target_site_city != "" )
+    {
+        url_ActualWeather += "&location=";
+        url_ActualWeather += target_site_city;
+    } else {
+        url_ActualWeather += "&location=ip";
+    }
+    
     url_ActualWeather += "&language=zh-Hans";
     url_ActualWeather += "&unit=c";
 
     //拼装生活指数
     String url_LifeIndex = "https://api.seniverse.com/v3/life/suggestion.json";
     url_LifeIndex += "?key=" + target_site_authcode;
-    url_LifeIndex += "&location=ip";
+    if( target_site_city != "" )
+    {
+        url_LifeIndex += "&location=";
+        url_LifeIndex += target_site_city;
+    } else {
+        url_LifeIndex += "&location=ip";
+    }
     url_LifeIndex += "&language=zh-Hans";
 
     String str_temp = "";

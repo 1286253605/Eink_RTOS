@@ -7,6 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "RTOS_Task.h"
+#include "my_ntp.h"
 
 #define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
 #define TIME_TO_SLEEP  60         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
@@ -121,6 +122,7 @@ void DrawClockPageAll( void )
     //     vTaskDelay( pdMS_TO_TICKS( 100 ) );
     //     if( ++try_time > 10 ) break;
     // }
+    void updateLocalTime();
     if( !getLocalTime( &local_time ) )
     {
         my_display.nextPage();

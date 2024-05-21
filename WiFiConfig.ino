@@ -207,25 +207,25 @@ void WIFI_HTMLSetap( void )
     
 
     // /* 城市名称缩写 */
-    // if( target_site_city != "" )
-    // {
-    //     /* 先清除后写入 心智天气密钥长度小于32字节 */
-    //     for( uint32_t i = TARGET_CITY_ADDR; i < ( TARGET_CITY_ADDR + TARGET_STRING_LEN ); i++ )
-    //     {
-    //         EEPROM.begin( 4096 );
-    //         EEPROM.write( i, 0 );
-    //         EEPROM.commit();
-    //     }
+    if( target_site_city != "" )
+    {
+        /* 先清除后写入 心智天气密钥长度小于32字节 */
+        for( uint32_t i = TARGET_CITY_ADDR; i < ( TARGET_CITY_ADDR + TARGET_STRING_LEN ); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( i, 0 );
+            EEPROM.commit();
+        }
 
-    //     for( uint32_t i = TARGET_CITY_ADDR; i < target_site_city.length(); i++ )
-    //     {
-    //         EEPROM.begin( 4096 );
-    //         EEPROM.write( TARGET_CITY_ADDR + i, target_site_city[ i ] );
-    //         EEPROM.commit();
-    //     }
+        for( uint32_t i = 0; i < target_site_city.length(); i++ )
+        {
+            EEPROM.begin( 4096 );
+            EEPROM.write( TARGET_CITY_ADDR + i, target_site_city[ i ] );
+            EEPROM.commit();
+        }
 
-    //     Serial.println( "Write city to flash done" );
-    // }
+        Serial.println( "Write city to flash done" );
+    }
 
     // EEPROM.commit();
     EEPROM.end();
@@ -350,13 +350,23 @@ bool CheckWiFiConfigInFlash( void )
     for( uint8_t i = TARGET_AUTH_ADDR; i < TARGET_AUTH_ADDR + 64; i++  )
     {
         char ch = EEPROM.read( i );
-        Serial.printf( "->%d\n", ch );
+        // Serial.printf( "->%d\n", ch );
         if( ( ch != 0 ) && ( ch != 255 )  )
         {
             target_site_authcode += char( EEPROM.read( i ) );
         }
     }
     Serial.printf( "Auth code : %s\n", target_site_authcode.c_str() );
+
+    for( uint8_t i = TARGET_CITY_ADDR; i < TARGET_CITY_ADDR + 32; i++ )
+    {
+        char ch = EEPROM.read( i );
+        if( (ch != 0) && (ch != 255) )
+        {
+            target_site_city += char( EEPROM.read(i) );
+        }
+    }
+    Serial.printf( "City : %s", target_site_city.c_str() );
 
     return true;
 }

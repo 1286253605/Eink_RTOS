@@ -23,7 +23,8 @@
 
 
 #define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
-#define TIME_TO_SLEEP  60         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
+#define TIME_TO_SLEEP       60
+#define TIME_TO_SLEEP_WEA   (60*60) // 更新间隔1h 
 #define digitalToggle(x) digitalWrite(x, !digitalRead(x))
 #define BOTTON_PIN_BITMASK  ((1ul<<1) | (1ul<<8))        // GPIOs 1 and 8
 
@@ -232,7 +233,7 @@ void Task_DrawWeather( void* args )
             vTaskDelay( pdMS_TO_TICKS( 1000 ) );
             gpio_wakeup_enable( GPIO_NUM_1, GPIO_INTR_LOW_LEVEL );           /* 触发唤醒的GPIO */
             esp_sleep_enable_gpio_wakeup();
-            esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP * uS_TO_S_FACTOR );  /* 规定时间触发一次唤醒 */
+            esp_sleep_enable_timer_wakeup( TIME_TO_SLEEP_WEA * uS_TO_S_FACTOR );  /* 规定时间触发一次唤醒 */
             esp_light_sleep_start();        /* 初始化之后就第一次进入Light Sleep */
         }
 

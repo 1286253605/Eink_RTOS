@@ -29,3 +29,8 @@ void ntp_init()
     printLocalTime();
     return;
 }   
+
+void updateLocalTime()
+{
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+}

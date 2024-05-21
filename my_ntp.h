@@ -3,5 +3,5 @@
 #include "time.h"
 
 void ntp_init();
-
+void updateLocalTime();
 #endif
