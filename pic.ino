@@ -11,7 +11,7 @@ void PicShowInPage( uint8_t pic_num )
     switch ( pic_num )
     {
     case 0:
-        my_display.drawInvertedBitmap( 0, 0, gImage_IMG_0005, 200, 200, GxEPD_BLACK );
+        my_display.drawInvertedBitmap( 0, 0, gImage_IMG_0005, 187, 190, GxEPD_BLACK );
         break;
     
     case 1: 
